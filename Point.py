@@ -1,5 +1,6 @@
 import copy
 
+
 class Point:
     def __init__(self, id_, c1, c2):
         self.id_ = id_
@@ -27,11 +28,11 @@ class Frame:
     def get_point(self, index):
         return self.points_list[index]
 
-    def get_number_of_points(self):
+    def size(self):
         return len(self.points_list)
 
     def __str__(self):
-        my_str = "Frame " + str(self.id_) + "\n"
+        my_str = "Frame " + str(self.frame_id) + "\n"
         for i in range(0, len(self.points_list)):
             my_str += str(self.points_list[i])
             if i != len(self.points_list) - 1:
@@ -49,28 +50,28 @@ def read_points_from_file(path):
     if path is None or path == '':
         raise FileExistsError("File doesn't exist.")
     handle = open(path, 'r')
-    Frame_List = []
+    frame_list = []
     working_index = 0
     for line in handle:
         if "Frame" in line:
             working_index = int(line.split(" ")[1][0:-2])
-            Frame_List.append(Frame(working_index))
+            frame_list.append(Frame(working_index))
         else:
             splits = line.split(" ")
             if len(splits) % 3 == 0:
                 for i in range(0, len(splits), 3):
-                    Frame_List[working_index].append_point(Point(int(splits[i]), int(splits[i+1]), int(splits[i+2])))
+                    frame_list[working_index].append_point(Point(int(splits[i]), int(splits[i+1]), int(splits[i+2])))
             else:
                 continue
     handle.close()
-    return Frame_List
+    return frame_list
 
 
-def rough_interpolate(pif_list):
+def rough_interpolate(frame_list):
     last_working_index = 0
-    for i in range(0, len(pif_list)):
-        if pif_list[i].length() > 0:
+    for i in range(0, len(frame_list)):
+        if frame_list[i].size() > 0:
             last_working_index = i
         else:
-            pif_list[i].set_points(copy.deepcopy(pif_list[last_working_index].get_points()))
-    return pif_list
+            frame_list[i].set_points_list(copy.deepcopy(frame_list[last_working_index].points_list))
+    return frame_list
