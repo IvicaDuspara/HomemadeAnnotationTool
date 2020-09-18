@@ -16,7 +16,11 @@ class GraphHolder:
     def set_image_id(self, image_id):
         self.image_id = image_id
 
+
 class GuiHolder:
+    display_width = 800
+    display_height = 600
+
     def __init__(self):
         # paths to files
         self.description_path = ""
@@ -94,10 +98,13 @@ class GuiHolder:
             ret, frame = self.cap.read()
             if ret:
                 working_list = self.points_in_frames[frame_counter]
+                height, width, channel = frame.shape
+                imS = cv2.resize(frame, (GuiHolder.display_width, GuiHolder.display_height))
                 for PIF in working_list.points_list:
-                    cv2.circle(frame, (int(PIF.c1), int(PIF.c2)), 7, (255, 0, 0), thickness=-1)
+                    PIF.set_scaled_coordinates(int(PIF.c1 * GuiHolder.display_width / width),
+                                               int(PIF.c2 * GuiHolder.display_height / height))
+                    # cv2.circle(imS, (int(PIF.sc1), int(PIF.sc2)), 3, (255, 0, 0), thickness=-1)
                 self.original_frames.append(frame)
-                imS = cv2.resize(frame, (800, 600))
                 self.resized_frames.append(imS)
             else:
                 break

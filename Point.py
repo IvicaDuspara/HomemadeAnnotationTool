@@ -6,12 +6,18 @@ class Point:
         self.id_ = id_
         self.c1 = c1
         self.c2 = c2
+        self.sc1 = c1
+        self.sc2 = c2
 
     def __str__(self):
         return "(" + str(self.id_) + "," + str(self.c1) + "," + str(self.c2) + ")"
 
     def __repr__(self):
         return str(self)
+
+    def set_scaled_coordinates(self, sc1, sc2):
+        self.sc1 = sc1
+        self.sc2 = sc2
 
 
 class Frame:
