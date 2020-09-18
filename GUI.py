@@ -8,6 +8,7 @@ class GraphHolder:
         self.graph = graph
         self.image_id = None
         self.drawn_points = []
+        self.selected_index = None
 
         self.colors = ['white', 'white', 'white',
                        'white', 'white', 'red',
@@ -30,6 +31,29 @@ class GraphHolder:
     def set_image_id(self, image_id):
         self.image_id = image_id
 
+    def select_point(self, item, frame):
+        sc1 = item.sc1
+        sc2 = item.sc2
+        if self.selected_index is None:
+            self.selected_index = item.id_
+            if self.selected_index not in (0, len(self.drawn_points)):
+                print("OOF")
+            self.graph.DeleteFigure(self.drawn_points[self.selected_index])
+            self.drawn_points[self.selected_index] = self.graph.DrawCircle((item.sc1, item.sc2), radius=3,
+                                                                           fill_color=self.colors[self.selected_index],
+                                                                           line_color="lime", line_width=2)
+        else:
+            self.graph.DeleteFigure(self.drawn_points[self.selected_index])
+            point_ = frame.get_point(self.selected_index)
+            self.drawn_points[self.selected_index] = self.graph.DrawCircle((point_.sc1, point_.sc2), radius=3,
+                                                                           fill_color=self.colors[self.selected_index])
+            self.selected_index = item.id_
+            sc1 = item.sc1
+            sc2 = item.sc2
+            self.graph.DeleteFigure(self.drawn_points[self.selected_index])
+            self.drawn_points[self.selected_index] = self.graph.DrawCircle((sc1, sc2), radius=3,
+                                                                           fill_color=self.colors[self.selected_index],
+                                                                           line_color="lime", line_width=2)
 
 class GuiHolder:
     display_width = 800
@@ -165,6 +189,9 @@ class GuiHolder:
         self.update_listbox()
         self.update_displayed_frame()
         self.update_slider(self.active_index)
+
+    def listbox_item_selected(self, item):
+        self.graph_holder.select_point(item, self.points_in_frames[self.active_index])
 
     def play(self):
         pass
