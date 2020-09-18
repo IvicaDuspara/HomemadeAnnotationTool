@@ -9,6 +9,13 @@ class GraphHolder:
         self.image_id = None
         self.drawn_points = []
 
+        self.colors = ['white', 'white', 'white',
+                       'white', 'white', 'red',
+                       'blue', 'red', 'blue',
+                       'red', 'blue', 'yellow',
+                       'green', 'yellow', 'green',
+                       'yellow', 'green']
+
     def draw_image(self, image, frame):
         if self.image_id is not None:
             self.graph.DeleteFigure(self.image_id)
@@ -17,7 +24,8 @@ class GraphHolder:
         self.image_id = self.graph.DrawImage(data=image, location=(0, 0))
         for i in range(0, frame.size()):
             point_ = frame.get_point(i)
-            self.drawn_points.append(self.graph.DrawCircle((point_.sc1, point_.sc2), radius=3, fill_color='blue'))
+            self.drawn_points.append(self.graph.DrawCircle((point_.sc1, point_.sc2), radius=3,
+                                                           fill_color=self.colors[i]))
 
     def set_image_id(self, image_id):
         self.image_id = image_id
@@ -58,7 +66,9 @@ class GuiHolder:
         self.layout.append([psg.HorizontalSeparator()])
         self.layout.append([psg.ProgressBar(max_value=0, orientation='horizontal', bar_color=('green', 'white'),
                                             visible=False, size=(100, 15))])
-        self.layout.append([psg.Listbox(values=[], key="-LIST-", size=(50, 150)),
+        self.layout.append([psg.Listbox(values=[], key="-LIST-", size=(50, 150),
+                                        select_mode="LISTBOX_SELECT_MODE_SINGLE",
+                                        enable_events=True),
                             psg.Graph((800, 600), (0, 600), (800, 0), enable_events=True, key="-GRAPH-",
                                       border_width=5, visible=True, drag_submits=True, background_color='white')])
 
@@ -157,7 +167,6 @@ class GuiHolder:
         self.update_slider(self.active_index)
 
     def play(self):
-        # self.graph.DrawImage(data=self.displayed_frames[self.active_index], location=(0, 0))
         pass
 
     def pause(self):
