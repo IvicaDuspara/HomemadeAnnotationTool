@@ -7,11 +7,17 @@ class GraphHolder:
     def __init__(self, graph):
         self.graph = graph
         self.image_id = None
+        self.drawn_points = []
 
-    def draw_image(self, image):
+    def draw_image(self, image, frame):
         if self.image_id is not None:
             self.graph.DeleteFigure(self.image_id)
+            for i in range(0, len(self.drawn_points)):
+                self.graph.DeleteFigure(self.drawn_points[i])
         self.image_id = self.graph.DrawImage(data=image, location=(0, 0))
+        for i in range(0, frame.size()):
+            point_ = frame.get_point(i)
+            self.drawn_points.append(self.graph.DrawCircle((point_.sc1, point_.sc2), radius=3, fill_color='blue'))
 
     def set_image_id(self, image_id):
         self.image_id = image_id
@@ -61,7 +67,6 @@ class GuiHolder:
         self.listbox = self.layout[4][0]
         self.graph = self.layout[4][1]
         self.graph_holder = GraphHolder(graph=self.graph)
-
 
     def set_window(self, window):
         self.window = window
@@ -113,6 +118,7 @@ class GuiHolder:
         self.progress_bar.update(0, max=0, visible=False)
         self.cap.release()
         self.displayed_frames = [None] * len(self.resized_frames)
+        self.update_listbox()
         self.update_displayed_frame()
 
     def update_listbox(self):
@@ -130,7 +136,7 @@ class GuiHolder:
         if self.displayed_frames[self.active_index] is None:
             imgbytes = cv2.imencode(".png", self.resized_frames[self.active_index])[1].tobytes()
             self.displayed_frames[self.active_index] = imgbytes
-        self.graph_holder.draw_image(self.displayed_frames[self.active_index])
+        self.graph_holder.draw_image(self.displayed_frames[self.active_index], self.points_in_frames[self.active_index])
 
     def next(self):
         if self.active_index == len(self.displayed_frames) - 1:

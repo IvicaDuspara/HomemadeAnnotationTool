@@ -10,7 +10,7 @@ class Point:
         self.sc2 = c2
 
     def __str__(self):
-        return "(" + str(self.id_) + "," + str(self.c1) + "," + str(self.c2) + ")"
+        return "(" + str(self.id_) + "," + str(self.sc1) + "," + str(self.sc2) + ")"
 
     def __repr__(self):
         return str(self)
