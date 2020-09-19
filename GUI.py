@@ -1,59 +1,8 @@
 import Point
+import GraphHolder
 import cv2
 import PySimpleGUI as psg
 
-
-class GraphHolder:
-    def __init__(self, graph):
-        self.graph = graph
-        self.image_id = None
-        self.drawn_points = []
-        self.selected_index = None
-
-        self.colors = ['white', 'white', 'white',
-                       'white', 'white', 'red',
-                       'blue', 'red', 'blue',
-                       'red', 'blue', 'yellow',
-                       'green', 'yellow', 'green',
-                       'yellow', 'green']
-
-    def draw_image(self, image, frame):
-        if self.image_id is not None:
-            self.graph.DeleteFigure(self.image_id)
-            for i in range(0, len(self.drawn_points)):
-                self.graph.DeleteFigure(self.drawn_points[i])
-        self.image_id = self.graph.DrawImage(data=image, location=(0, 0))
-        for i in range(0, frame.size()):
-            point_ = frame.get_point(i)
-            self.drawn_points.append(self.graph.DrawCircle((point_.sc1, point_.sc2), radius=3,
-                                                           fill_color=self.colors[i]))
-
-    def set_image_id(self, image_id):
-        self.image_id = image_id
-
-    def select_point(self, item, frame):
-        sc1 = item.sc1
-        sc2 = item.sc2
-        if self.selected_index is None:
-            self.selected_index = item.id_
-            if self.selected_index not in (0, len(self.drawn_points)):
-                print("OOF")
-            self.graph.DeleteFigure(self.drawn_points[self.selected_index])
-            self.drawn_points[self.selected_index] = self.graph.DrawCircle((item.sc1, item.sc2), radius=3,
-                                                                           fill_color=self.colors[self.selected_index],
-                                                                           line_color="lime", line_width=2)
-        else:
-            self.graph.DeleteFigure(self.drawn_points[self.selected_index])
-            point_ = frame.get_point(self.selected_index)
-            self.drawn_points[self.selected_index] = self.graph.DrawCircle((point_.sc1, point_.sc2), radius=3,
-                                                                           fill_color=self.colors[self.selected_index])
-            self.selected_index = item.id_
-            sc1 = item.sc1
-            sc2 = item.sc2
-            self.graph.DeleteFigure(self.drawn_points[self.selected_index])
-            self.drawn_points[self.selected_index] = self.graph.DrawCircle((sc1, sc2), radius=3,
-                                                                           fill_color=self.colors[self.selected_index],
-                                                                           line_color="lime", line_width=2)
 
 class GuiHolder:
     display_width = 800
@@ -84,6 +33,7 @@ class GuiHolder:
                             psg.In(size=(35, 1), enable_events=True, key="-FILE_VIDEO-"),
                             psg.FileBrowse()])
         self.layout.append([psg.Button("Previous"), psg.Button("Play"), psg.Button("Next"),
+                            psg.Button("Clear Selection", disabled=True, key="-CLEAR_SELECTION-"),
                             psg.Slider(default_value=0, range=(0, 0), disabled=True, enable_events=True,
                                        orientation='horizontal',
                                        size=(75, 25), key="-FRAME_SLIDER-")])
@@ -96,11 +46,12 @@ class GuiHolder:
                             psg.Graph((800, 600), (0, 600), (800, 0), enable_events=True, key="-GRAPH-",
                                       border_width=5, visible=True, drag_submits=True, background_color='white')])
 
-        self.slider = self.layout[1][3]
+        self.clear_button = self.layout[1][3]
+        self.slider = self.layout[1][4]
         self.progress_bar = self.layout[3][0]
         self.listbox = self.layout[4][0]
         self.graph = self.layout[4][1]
-        self.graph_holder = GraphHolder(graph=self.graph)
+        self.graph_holder = GraphHolder.GraphHolder(graph=self.graph)
 
     def set_window(self, window):
         self.window = window
@@ -118,6 +69,7 @@ class GuiHolder:
         self.description_path = path
         self.slider.update(value=self.active_index, range=(0, len(self.points_in_frames) - 1), disabled=False)
         self.update_listbox()
+        self.clear_button.update(disabled=False)
 
     def load_video_file(self, path):
         if path is None:
@@ -142,7 +94,6 @@ class GuiHolder:
                 for PIF in working_list.points_list:
                     PIF.set_scaled_coordinates(int(PIF.c1 * GuiHolder.display_width / width),
                                                int(PIF.c2 * GuiHolder.display_height / height))
-                    # cv2.circle(imS, (int(PIF.sc1), int(PIF.sc2)), 3, (255, 0, 0), thickness=-1)
                 self.original_frames.append(frame)
                 self.resized_frames.append(imS)
             else:
@@ -198,3 +149,6 @@ class GuiHolder:
 
     def pause(self):
         pass
+
+    def clear_selection(self):
+        self.graph_holder.clear_selection(self.points_in_frames[self.active_index])

@@ -29,7 +29,7 @@ while True:
     elif event == "-FRAME_SLIDER-":
         c.slider_moved(int(values["-FRAME_SLIDER-"]))
     elif event == "-LIST-":
-        print("Aha, selkcija liste. Označen je:")
-        print(values["-LIST-"])
         c.listbox_item_selected(values["-LIST-"][0])
+    elif event == "-CLEAR_SELECTION-":
+        c.clear_selection()
 window.close()
