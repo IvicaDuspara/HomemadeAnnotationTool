@@ -1,16 +1,17 @@
 import copy
-
+import Constants as const
 
 class Point:
-    def __init__(self, id_, c1, c2):
+    def __init__(self, id_, c1, c2, label_type='openvino_en'):
         self.id_ = id_
         self.c1 = c1
         self.c2 = c2
         self.sc1 = c1
         self.sc2 = c2
+        self.labels = const.D[label_type]
 
     def __str__(self):
-        return "(" + str(self.id_) + "," + str(self.sc1) + "," + str(self.sc2) + ")"
+        return str(self.labels[self.id_]) + " " + "(" + str(self.id_) + "," + str(self.sc1) + "," + str(self.sc2) + ")"
 
     def __repr__(self):
         return str(self)

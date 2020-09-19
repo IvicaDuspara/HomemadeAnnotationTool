@@ -151,4 +151,5 @@ class GuiHolder:
         pass
 
     def clear_selection(self):
+        self.update_listbox()
         self.graph_holder.clear_selection(self.points_in_frames[self.active_index])
