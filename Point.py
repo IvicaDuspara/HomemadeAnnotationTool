@@ -20,6 +20,9 @@ class Point:
         self.sc1 = sc1
         self.sc2 = sc2
 
+    def get_my_label(self):
+        return self.labels[self.id_]
+
 
 class Frame:
     def __init__(self, frame_id):
