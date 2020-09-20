@@ -3,7 +3,8 @@ import PySimpleGUI as PSG
 import Point
 import GUI
 
-c = GUI.GuiHolder()
+
+c = GUI.GuiHolder(labels_path="./openvino_labels.json")
 window = PSG.Window("Demo", c.layout, size=(1200, 800)).Finalize()
 window.maximize()
 c.set_window(window)

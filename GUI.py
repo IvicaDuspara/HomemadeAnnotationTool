@@ -2,13 +2,16 @@ import Point
 import GraphHolder
 import cv2
 import PySimpleGUI as psg
+import ConfigParser
 
 
 class GuiHolder:
     display_width = 800
     display_height = 600
 
-    def __init__(self):
+    def __init__(self, labels_path):
+        self.labels, self.colors, self.connected_points = ConfigParser.parse_labels_file(labels_path)
+
         # paths to files
         self.description_path = ""
         self.video_path = ""
@@ -51,7 +54,8 @@ class GuiHolder:
         self.progress_bar = self.layout[3][0]
         self.listbox = self.layout[4][0]
         self.graph = self.layout[4][1]
-        self.graph_holder = GraphHolder.GraphHolder(graph=self.graph)
+        self.graph_holder = GraphHolder.GraphHolder(graph=self.graph, colors=self.colors,
+                                                    connected_points=self.connected_points)
 
     def set_window(self, window):
         self.window = window
@@ -64,7 +68,7 @@ class GuiHolder:
         elif path == '' or path.strip() == '':
             psg.popup_error('File error', 'Path can not be an empty string')
             return
-        self.points_in_frames = Point.read_points_from_file(path)
+        self.points_in_frames = Point.read_points_from_file(path, self.labels)
         self.points_in_frames = Point.rough_interpolate(self.points_in_frames)
         self.description_path = path
         self.slider.update(value=self.active_index, range=(0, len(self.points_in_frames) - 1), disabled=False)

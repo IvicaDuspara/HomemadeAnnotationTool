@@ -1,8 +1,5 @@
-import Constants as Const
-
-
 class GraphHolder:
-    def __init__(self, graph, label_type='openvino_lines'):
+    def __init__(self, graph, colors, connected_points):
         self.graph = graph
         self.image_id = None
         self.drawn_points = []
@@ -10,13 +7,8 @@ class GraphHolder:
         self.selected_index = None
         self.selected_text = None
 
-        self.colors = ['white', 'white', 'white',
-                       'white', 'white', 'red',
-                       'blue', 'red', 'blue',
-                       'red', 'blue', 'yellow',
-                       'green', 'yellow', 'green',
-                       'yellow', 'green']
-        self.label_type = label_type
+        self.colors = colors
+        self.connected_points = connected_points
 
     def draw_image(self, image, frame):
         if self.image_id is not None:
@@ -30,12 +22,13 @@ class GraphHolder:
             point_ = frame.get_point(i)
             self.drawn_points.append(self.graph.DrawCircle((point_.sc1, point_.sc2), radius=4,
                                                            fill_color=self.colors[i]))
-        for triplets in Const.D[self.label_type]:
-            start_point = frame.get_point(triplets[0])
-            end_point = frame.get_point(triplets[1])
+        for item in self.connected_points:
+            splits = item.split(",")
+            start_point = frame.get_point(int(splits[0]))
+            end_point = frame.get_point(int(splits[1]))
             self.drawn_lines.append(self.graph.DrawLine(point_from=(start_point.sc1, start_point.sc2),
                                                         point_to=(end_point.sc1, end_point.sc2),
-                                                        color=triplets[2]))
+                                                        color=splits[2]))
 
     def set_image_id(self, image_id):
         self.image_id = image_id
@@ -79,4 +72,3 @@ class GraphHolder:
                                                                        fill_color=self.colors[self.selected_index])
         self.selected_index = None
         self.selected_text = None
-

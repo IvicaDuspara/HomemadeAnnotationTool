@@ -1,18 +1,17 @@
 import copy
-import Constants as Const
 
 
 class Point:
-    def __init__(self, id_, c1, c2, label_type='openvino_en'):
+    def __init__(self, id_, c1, c2, label):
         self.id_ = id_
         self.c1 = c1
         self.c2 = c2
         self.sc1 = c1
         self.sc2 = c2
-        self.labels = Const.D[label_type]
+        self.label = label
 
     def __str__(self):
-        return str(self.labels[self.id_]) + " " + "(" + str(self.id_) + "," + str(self.sc1) + "," + str(self.sc2) + ")"
+        return str(self.label) + " " + "(" + str(self.id_) + "," + str(self.sc1) + "," + str(self.sc2) + ")"
 
     def __repr__(self):
         return str(self)
@@ -22,7 +21,7 @@ class Point:
         self.sc2 = sc2
 
     def get_my_label(self):
-        return self.labels[self.id_]
+        return self.label
 
 
 class Frame:
@@ -57,7 +56,7 @@ class Frame:
 
 
 # Functions for creating points / list of points
-def read_points_from_file(path):
+def read_points_from_file(path, labels):
     if path is None or path == '':
         raise FileExistsError("File doesn't exist.")
     handle = open(path, 'r')
@@ -71,7 +70,8 @@ def read_points_from_file(path):
             splits = line.split(" ")
             if len(splits) % 3 == 0:
                 for i in range(0, len(splits), 3):
-                    frame_list[working_index].append_point(Point(int(splits[i]), int(splits[i+1]), int(splits[i+2])))
+                    frame_list[working_index].append_point(Point(int(splits[i]), int(splits[i+1]),
+                                                                 int(splits[i+2]), labels[i//3]))
             else:
                 continue
     handle.close()
