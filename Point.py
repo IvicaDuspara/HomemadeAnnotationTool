@@ -1,5 +1,6 @@
 import copy
-import Constants as const
+import Constants as Const
+
 
 class Point:
     def __init__(self, id_, c1, c2, label_type='openvino_en'):
@@ -8,7 +9,7 @@ class Point:
         self.c2 = c2
         self.sc1 = c1
         self.sc2 = c2
-        self.labels = const.D[label_type]
+        self.labels = Const.D[label_type]
 
     def __str__(self):
         return str(self.labels[self.id_]) + " " + "(" + str(self.id_) + "," + str(self.sc1) + "," + str(self.sc2) + ")"
