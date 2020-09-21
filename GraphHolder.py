@@ -4,9 +4,9 @@ class GraphHolder:
         self.image_id = None
         self.drawn_points = []
         self.drawn_lines = []
+        self.lines_dictionary = {}
         self.selected_index = None
         self.selected_text = None
-
         self.colors = colors
         self.connected_points = connected_points
 
@@ -18,10 +18,15 @@ class GraphHolder:
             for i in range(0, len(self.drawn_lines)):
                 self.graph.DeleteFigure(self.drawn_lines[i])
         self.image_id = self.graph.DrawImage(data=image, location=(0, 0))
+        self.drawn_points = []
+        self.drawn_lines = []
+        self.lines_dictionary = {}
+
         for i in range(0, frame.size()):
             point_ = frame.get_point(i)
             self.drawn_points.append(self.graph.DrawCircle((point_.sc1, point_.sc2), radius=4,
                                                            fill_color=self.colors[i]))
+        counter = 0
         for item in self.connected_points:
             splits = item.split(",")
             start_point = frame.get_point(int(splits[0]))
@@ -29,6 +34,15 @@ class GraphHolder:
             self.drawn_lines.append(self.graph.DrawLine(point_from=(start_point.sc1, start_point.sc2),
                                                         point_to=(end_point.sc1, end_point.sc2),
                                                         color=splits[2]))
+            if int(splits[0]) not in self.lines_dictionary:
+                connected = [(int(splits[1]), counter)]
+                self.lines_dictionary[int(splits[0])] = connected
+            else:
+                self.lines_dictionary[int(splits[0])].append((int(splits[1]), counter))
+            counter += 1
+
+    def print_it(self):
+        print(self.lines_dictionary)
 
     def set_image_id(self, image_id):
         self.image_id = image_id
@@ -72,3 +86,8 @@ class GraphHolder:
                                                                        fill_color=self.colors[self.selected_index])
         self.selected_index = None
         self.selected_text = None
+
+    def move_point(self, frame, new_sc1, new_sc2):
+        # delete old point
+        pass
+        # delete lines
