@@ -89,5 +89,29 @@ class GraphHolder:
 
     def move_point(self, frame, new_sc1, new_sc2):
         # delete old point
-        pass
-        # delete lines
+        if self.selected_index is None:
+            return
+        # Delete selected point
+        self.graph.DeleteFigure(self.drawn_points[self.selected_index])
+        self.graph.DeleteFigure(self.selected_text)
+        # Delete old lines
+        for item in self.lines_dictionary[self.selected_index]:
+            index_in_drawn_lines = item[1]
+            self.graph.DeleteFigure(self.drawn_lines[index_in_drawn_lines])
+        # Move selected point
+        frame.get_point(self.selected_index).set_scaled_coordinates(new_sc1, new_sc2)
+        # Draw selected point again
+        self.drawn_points[self.selected_index] = self.graph.DrawCircle((new_sc1, new_sc2), radius=4,
+                                                                       fill_color=self.colors[self.selected_index],
+                                                                       line_color="lime", line_width=2)
+        self.selected_text = self.graph.DrawText(frame.get_point(self.selected_index).get_my_label(),
+                                                 location=(new_sc1 - 10, new_sc2 - 10))
+        # Draw lines again
+        for item in self.lines_dictionary[self.selected_index]:
+            start_point = frame.get_point(self.selected_index)
+            end_point = frame.get_point(item[0])
+            index_in_drawn_lines = item[1]
+            color = self.connected_points[index_in_drawn_lines].split(",")[2]
+            self.drawn_lines[index_in_drawn_lines] = self.graph.DrawLine(point_from=(start_point.sc1, start_point.sc2),
+                                                                         point_to=(end_point.sc1, end_point.sc2),
+                                                                         color=color)

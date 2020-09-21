@@ -33,4 +33,6 @@ while True:
         c.listbox_item_selected(values["-LIST-"][0])
     elif event == "-CLEAR_SELECTION-":
         c.clear_selection()
+    elif event == "-GRAPH-":
+        c.move_point(values["-GRAPH-"])
 window.close()

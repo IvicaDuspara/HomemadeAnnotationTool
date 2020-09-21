@@ -135,6 +135,7 @@ class GuiHolder:
         self.update_listbox()
         self.update_displayed_frame()
         self.update_slider(self.active_index)
+        self.graph_holder.selected_index = None
 
     def previous(self):
         if self.active_index == 0:
@@ -144,6 +145,7 @@ class GuiHolder:
         self.update_listbox()
         self.update_displayed_frame()
         self.update_slider(self.active_index)
+        self.graph_holder.selected_index = None
 
     def listbox_item_selected(self, item):
         self.graph_holder.select_point(item, self.points_in_frames[self.active_index])
@@ -157,3 +159,8 @@ class GuiHolder:
     def clear_selection(self):
         self.update_listbox()
         self.graph_holder.clear_selection(self.points_in_frames[self.active_index])
+
+    def move_point(self, coordinates):
+        new_sc1 = int(coordinates[0])
+        new_sc2 = int(coordinates[1])
+        self.graph_holder.move_point(self.points_in_frames[self.active_index], new_sc1, new_sc2)
