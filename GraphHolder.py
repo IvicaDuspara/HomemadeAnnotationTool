@@ -41,9 +41,6 @@ class GraphHolder:
                 self.lines_dictionary[int(splits[0])].append((int(splits[1]), counter))
             counter += 1
 
-    def print_it(self):
-        print(self.lines_dictionary)
-
     def set_image_id(self, image_id):
         self.image_id = image_id
 
@@ -62,8 +59,7 @@ class GraphHolder:
 
         else:
             # First three lines remove highlight from currently selected point.
-            self.graph.DeleteFigure(self.drawn_points[self.selected_index])
-            self.graph.DeleteFigure(self.selected_text)
+            self.__delete_selected_point()
             point_ = frame.get_point(self.selected_index)
             self.drawn_points[self.selected_index] = self.graph.DrawCircle((point_.sc1, point_.sc2), radius=4,
                                                                            fill_color=self.colors[self.selected_index])
@@ -80,8 +76,7 @@ class GraphHolder:
             return
         sc1 = frame.get_point(self.selected_index).sc1
         sc2 = frame.get_point(self.selected_index).sc2
-        self.graph.DeleteFigure(self.drawn_points[self.selected_index])
-        self.graph.DeleteFigure(self.selected_text)
+        self.__delete_selected_point()
         self.drawn_points[self.selected_index] = self.graph.DrawCircle((sc1, sc2), radius=4,
                                                                        fill_color=self.colors[self.selected_index])
         self.selected_index = None
@@ -92,12 +87,18 @@ class GraphHolder:
         if self.selected_index is None:
             return
         # Delete selected point
-        self.graph.DeleteFigure(self.drawn_points[self.selected_index])
-        self.graph.DeleteFigure(self.selected_text)
-        # Delete old lines
-        for item in self.lines_dictionary[self.selected_index]:
-            index_in_drawn_lines = item[1]
-            self.graph.DeleteFigure(self.drawn_lines[index_in_drawn_lines])
+        self.__delete_selected_point()
+        # Delete old lines which start with this point:
+        if self.selected_index in self.lines_dictionary:
+            for item in self.lines_dictionary[self.selected_index]:
+                index_in_drawn_lines = item[1]
+                self.graph.DeleteFigure(self.drawn_lines[index_in_drawn_lines])
+        # Delete old lines which end with this point:
+        for key, value in self.lines_dictionary.items():
+            for pair in value:
+                if pair[0] == self.selected_index:
+                    self.graph.DeleteFigure(self.drawn_lines[pair[1]])
+
         # Move selected point
         frame.get_point(self.selected_index).set_scaled_coordinates(new_sc1, new_sc2)
         # Draw selected point again
@@ -106,12 +107,31 @@ class GraphHolder:
                                                                        line_color="lime", line_width=2)
         self.selected_text = self.graph.DrawText(frame.get_point(self.selected_index).get_my_label(),
                                                  location=(new_sc1 - 10, new_sc2 - 10))
-        # Draw lines again
-        for item in self.lines_dictionary[self.selected_index]:
-            start_point = frame.get_point(self.selected_index)
-            end_point = frame.get_point(item[0])
-            index_in_drawn_lines = item[1]
-            color = self.connected_points[index_in_drawn_lines].split(",")[2]
-            self.drawn_lines[index_in_drawn_lines] = self.graph.DrawLine(point_from=(start_point.sc1, start_point.sc2),
-                                                                         point_to=(end_point.sc1, end_point.sc2),
-                                                                         color=color)
+        # Draw lines which start with moved point again
+        if self.selected_index in self.lines_dictionary:
+            for item in self.lines_dictionary[self.selected_index]:
+                start_point = frame.get_point(self.selected_index)
+                end_point = frame.get_point(item[0])
+                index_in_drawn_lines = item[1]
+                color = self.connected_points[index_in_drawn_lines].split(",")[2]
+                self.drawn_lines[index_in_drawn_lines] = self.graph.DrawLine(point_from=(start_point.sc1,
+                                                                                         start_point.sc2),
+                                                                             point_to=(end_point.sc1, end_point.sc2),
+                                                                             color=color)
+        for key, value in self.lines_dictionary.items():
+            for pair in value:
+                if pair[0] == self.selected_index:
+                    start_point = frame.get_point(key)
+                    end_point = frame.get_point(self.selected_index)
+                    index_in_drawn_lines = pair[1]
+                    color = self.connected_points[index_in_drawn_lines].split(",")[2]
+                    self.drawn_lines[index_in_drawn_lines] = self.graph.DrawLine(point_from=(start_point.sc1,
+                                                                                             start_point.sc2),
+                                                                                 point_to=(end_point.sc1,
+                                                                                           end_point.sc2),
+                                                                                 color=color)
+
+    # Private methods
+    def __delete_selected_point(self):
+        self.graph.DeleteFigure(self.drawn_points[self.selected_index])
+        self.graph.DeleteFigure(self.selected_text)
