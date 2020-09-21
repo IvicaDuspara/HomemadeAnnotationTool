@@ -13,8 +13,8 @@ class GuiHolder:
         self.labels, self.colors, self.connected_points = ConfigParser.parse_labels_file(labels_path)
 
         # paths to files
-        self.description_path = ""
-        self.video_path = ""
+        self.load_description_path = ""
+        self.load_video_path = ""
 
         # different frames list
         self.original_frames = []
@@ -25,7 +25,7 @@ class GuiHolder:
         self.active_index = 0
 
         # other
-        self.cap = None
+        self.__cap = None
         self.window = None
         self.layout = []
 
@@ -76,7 +76,7 @@ class GuiHolder:
             return
         self.points_in_frames = Point.read_points_from_file(path, self.labels)
         self.points_in_frames = Point.rough_interpolate(self.points_in_frames)
-        self.description_path = path
+        self.load_description_path = path
         self.__slider.update(value=self.active_index, range=(0, len(self.points_in_frames) - 1), disabled=False)
         self.update_listbox()
         self.__clear_button.update(disabled=False)
@@ -90,15 +90,15 @@ class GuiHolder:
         elif path == '' or path.strip() == '':
             psg.popup_error('File error', 'Path can not be an empty string')
             return
-        elif self.description_path == "":
+        elif self.load_description_path == "":
             psg.popup_error('Video file error', 'Please load the file describing frames first')
             return
-        self.video_path = path
-        self.cap = cv2.VideoCapture(path)
+        self.load_video_path = path
+        self.__cap = cv2.VideoCapture(path)
         frame_counter = 0
         self.__progress_bar.update(frame_counter, max=int(len(self.points_in_frames)), visible=True)
-        while self.cap.isOpened():
-            ret, frame = self.cap.read()
+        while self.__cap.isOpened():
+            ret, frame = self.__cap.read()
             if ret:
                 working_list = self.points_in_frames[frame_counter]
                 height, width, channel = frame.shape
@@ -113,13 +113,12 @@ class GuiHolder:
             frame_counter += 1
             self.__progress_bar.update(frame_counter)
         self.__progress_bar.update(0, max=0, visible=False)
-        self.cap.release()
+        self.__cap.release()
         self.displayed_frames = [None] * len(self.resized_frames)
         self.update_listbox()
         self.update_displayed_frame()
 
     def save_description_file(self, filename):
-        print("Called.!")
         file = open(filename, 'w')
         for i in range(0, len(self.points_in_frames)):
             file.write("Frame " + str(i) + ":\n")
@@ -133,7 +132,9 @@ class GuiHolder:
                     temp_string += "\n"
             file.write(temp_string)
         file.close()
-        print("Done!")
+
+    def save_video_file(self, filename):
+        self.__rescale_frames()
 
     def clear_selection(self):
         self.update_listbox()
@@ -192,3 +193,7 @@ class GuiHolder:
         new_sc2 = int(coordinates[1])
         self.__graph_holder.move_point(self.points_in_frames[self.active_index], new_sc1, new_sc2)
         self.update_listbox()
+
+    # Private methods
+    def __rescale_frames(self):
+        pass
