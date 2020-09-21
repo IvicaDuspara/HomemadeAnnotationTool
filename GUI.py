@@ -164,3 +164,4 @@ class GuiHolder:
         new_sc1 = int(coordinates[0])
         new_sc2 = int(coordinates[1])
         self.graph_holder.move_point(self.points_in_frames[self.active_index], new_sc1, new_sc2)
+        self.update_listbox()
