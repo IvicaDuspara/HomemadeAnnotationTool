@@ -37,6 +37,8 @@ class GuiHolder:
                             psg.FileBrowse()])
         self.layout.append([psg.Button("Previous"), psg.Button("Play"), psg.Button("Next"),
                             psg.Button("Clear Selection", disabled=True, key="-CLEAR_SELECTION-"),
+                            psg.Button("Save description", disabled=True, key="-SAVE_DESCRIPTION-"),
+                            psg.Button("Save video", disabled=True, key="-SAVE_VIDEO-"),
                             psg.Slider(default_value=0, range=(0, 0), disabled=True, enable_events=True,
                                        orientation='horizontal',
                                        size=(75, 25), key="-FRAME_SLIDER-")])
@@ -48,14 +50,18 @@ class GuiHolder:
                                         enable_events=True),
                             psg.Graph((800, 600), (0, 600), (800, 0), enable_events=True, key="-GRAPH-",
                                       border_width=5, visible=True, drag_submits=True, background_color='white')])
+        self.layout.append([psg.Button("Save description", disabled=True, key="-SAVE_DESCRIPTION-"),
+                            psg.Button("Save video", disabled=True, key="-SAVE_VIDEO-")])
 
-        self.clear_button = self.layout[1][3]
-        self.slider = self.layout[1][4]
-        self.progress_bar = self.layout[3][0]
-        self.listbox = self.layout[4][0]
-        self.graph = self.layout[4][1]
-        self.graph_holder = GraphHolder.GraphHolder(graph=self.graph, colors=self.colors,
-                                                    connected_points=self.connected_points)
+        self.__clear_button = self.layout[1][3]
+        self.__slider = self.layout[1][6]
+        self.__progress_bar = self.layout[3][0]
+        self.__listbox = self.layout[4][0]
+        self.__graph = self.layout[4][1]
+        self.__save_video = self.layout[1][5]
+        self.__save_description = self.layout[1][4]
+        self.__graph_holder = GraphHolder.GraphHolder(graph=self.__graph, colors=self.colors,
+                                                      connected_points=self.connected_points)
 
     def set_window(self, window):
         self.window = window
@@ -71,9 +77,11 @@ class GuiHolder:
         self.points_in_frames = Point.read_points_from_file(path, self.labels)
         self.points_in_frames = Point.rough_interpolate(self.points_in_frames)
         self.description_path = path
-        self.slider.update(value=self.active_index, range=(0, len(self.points_in_frames) - 1), disabled=False)
+        self.__slider.update(value=self.active_index, range=(0, len(self.points_in_frames) - 1), disabled=False)
         self.update_listbox()
-        self.clear_button.update(disabled=False)
+        self.__clear_button.update(disabled=False)
+        self.__save_video.update(disabled=False)
+        self.__save_description.update(disabled=False)
 
     def load_video_file(self, path):
         if path is None:
@@ -88,7 +96,7 @@ class GuiHolder:
         self.video_path = path
         self.cap = cv2.VideoCapture(path)
         frame_counter = 0
-        self.progress_bar.update(frame_counter, max=int(len(self.points_in_frames)), visible=True)
+        self.__progress_bar.update(frame_counter, max=int(len(self.points_in_frames)), visible=True)
         while self.cap.isOpened():
             ret, frame = self.cap.read()
             if ret:
@@ -103,18 +111,66 @@ class GuiHolder:
             else:
                 break
             frame_counter += 1
-            self.progress_bar.update(frame_counter)
-        self.progress_bar.update(0, max=0, visible=False)
+            self.__progress_bar.update(frame_counter)
+        self.__progress_bar.update(0, max=0, visible=False)
         self.cap.release()
         self.displayed_frames = [None] * len(self.resized_frames)
         self.update_listbox()
         self.update_displayed_frame()
 
+    def save_description_file(self, filename):
+        print("Called.!")
+        file = open(filename, 'w')
+        for i in range(0, len(self.points_in_frames)):
+            file.write("Frame " + str(i) + ":\n")
+            temp_string = ""
+            for j in range(0, self.points_in_frames[i].size()):
+                working_point = self.points_in_frames[i].get_point(j)
+                temp_string += str(working_point.id_) + " " + str(working_point.sc1) + " " + str(working_point.sc2)
+                if j != self.points_in_frames[i].size() - 1:
+                    temp_string += " "
+                else:
+                    temp_string += "\n"
+            file.write(temp_string)
+        file.close()
+        print("Done!")
+
+    def clear_selection(self):
+        self.update_listbox()
+        self.__graph_holder.clear_selection(self.points_in_frames[self.active_index])
+
+    def next(self):
+        if self.active_index == len(self.displayed_frames) - 1:
+            self.active_index = 0
+        else:
+            self.active_index += 1
+        self.update_listbox()
+        self.update_displayed_frame()
+        self.update_slider(self.active_index)
+        self.__graph_holder.selected_index = None
+
+    def previous(self):
+        if self.active_index == 0:
+            self.active_index = len(self.displayed_frames) - 1
+        else:
+            self.active_index -= 1
+        self.update_listbox()
+        self.update_displayed_frame()
+        self.update_slider(self.active_index)
+        self.__graph_holder.selected_index = None
+
+    def play(self):
+        pass
+
+    def pause(self):
+        pass
+
+    # Methods for upating gui
     def update_listbox(self):
-        self.listbox.update(values=self.points_in_frames[self.active_index].points_list)
+        self.__listbox.update(values=self.points_in_frames[self.active_index].points_list)
 
     def update_slider(self, value):
-        self.slider.update(value=value)
+        self.__slider.update(value=value)
 
     def slider_moved(self, value):
         self.active_index = value
@@ -125,43 +181,14 @@ class GuiHolder:
         if self.displayed_frames[self.active_index] is None:
             imgbytes = cv2.imencode(".png", self.resized_frames[self.active_index])[1].tobytes()
             self.displayed_frames[self.active_index] = imgbytes
-        self.graph_holder.draw_image(self.displayed_frames[self.active_index], self.points_in_frames[self.active_index])
+        self.__graph_holder.draw_image(self.displayed_frames[self.active_index], self.points_in_frames[self.active_index])
 
-    def next(self):
-        if self.active_index == len(self.displayed_frames) - 1:
-            self.active_index = 0
-        else:
-            self.active_index += 1
-        self.update_listbox()
-        self.update_displayed_frame()
-        self.update_slider(self.active_index)
-        self.graph_holder.selected_index = None
-
-    def previous(self):
-        if self.active_index == 0:
-            self.active_index = len(self.displayed_frames) - 1
-        else:
-            self.active_index -= 1
-        self.update_listbox()
-        self.update_displayed_frame()
-        self.update_slider(self.active_index)
-        self.graph_holder.selected_index = None
 
     def listbox_item_selected(self, item):
-        self.graph_holder.select_point(item, self.points_in_frames[self.active_index])
-
-    def play(self):
-        pass
-
-    def pause(self):
-        pass
-
-    def clear_selection(self):
-        self.update_listbox()
-        self.graph_holder.clear_selection(self.points_in_frames[self.active_index])
+        self.__graph_holder.select_point(item, self.points_in_frames[self.active_index])
 
     def move_point(self, coordinates):
         new_sc1 = int(coordinates[0])
         new_sc2 = int(coordinates[1])
-        self.graph_holder.move_point(self.points_in_frames[self.active_index], new_sc1, new_sc2)
+        self.__graph_holder.move_point(self.points_in_frames[self.active_index], new_sc1, new_sc2)
         self.update_listbox()

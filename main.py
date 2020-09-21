@@ -35,4 +35,6 @@ while True:
         c.clear_selection()
     elif event == "-GRAPH-":
         c.move_point(values["-GRAPH-"])
+    elif event == "-SAVE_DESCRIPTION-":
+        c.save_description_file("./saved.txt")
 window.close()
