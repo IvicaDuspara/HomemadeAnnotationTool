@@ -2,6 +2,14 @@ Program treba opencv i pysimplegui kako bi se pokrenuo.
 
 Oba ova dependencya se mogu dobiti preko pip-a.
 
+pip3 install opencv-python
+(https://opencv.org/)
+
+pip3 install pysimplegui
+(https://pypi.org/project/PySimpleGUI/)
+Moguće je da je potrebno instalirati tkinter. Na linuxu se ovo može zgrabit sa apt-get
+a za windowse nisam siguran
+
 Nakon što su instalirani, dovoljno je napisati python3 main.py
 
 Kako bi program radio potrebno je učitati dvije datoteke. Prva je opis točaka.
