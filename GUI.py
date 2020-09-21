@@ -8,6 +8,8 @@ import ConfigParser
 class GuiHolder:
     display_width = 800
     display_height = 600
+    original_width = 800
+    original_height = 600
 
     def __init__(self, labels_path):
         self.labels, self.colors, self.connected_points = ConfigParser.parse_labels_file(labels_path)
@@ -183,7 +185,6 @@ class GuiHolder:
             imgbytes = cv2.imencode(".png", self.resized_frames[self.active_index])[1].tobytes()
             self.displayed_frames[self.active_index] = imgbytes
         self.__graph_holder.draw_image(self.displayed_frames[self.active_index], self.points_in_frames[self.active_index])
-
 
     def listbox_item_selected(self, item):
         self.__graph_holder.select_point(item, self.points_in_frames[self.active_index])
