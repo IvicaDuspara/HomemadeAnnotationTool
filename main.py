@@ -2,12 +2,16 @@ import cv2
 import PySimpleGUI as PSG
 import Point
 import GUI
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('-d', '--description', help='Path to description file')
+parser.add_argument('-j', '--json', help='Path to .json file')
 
-
-c = GUI.GuiHolder(labels_path="./openvino_labels.json")
-window = PSG.Window("Demo", c.layout, size=(1200, 800)).Finalize()
+c = GUI.GuiHolder()
+window = PSG.Window("Demo", c.layout, size=(1330, 900)).Finalize()
 window.maximize()
 c.set_window(window)
+
 # Create an event loop
 while True:
     event, values = window.read()
@@ -15,6 +19,8 @@ while True:
     # presses the OK button
     if event == "Bezveze" or event == PSG.WIN_CLOSED:
         break
+    elif event == "-FILE_JSON-":
+        c.load_json_file(values["-FILE_JSON-"])
     elif event == "-FILE_DESCRIPTION-":
         c.load_description_file(values["-FILE_DESCRIPTION-"])
     elif event == "-FILE_VIDEO-":

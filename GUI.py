@@ -11,12 +11,13 @@ class GuiHolder:
     original_width = 800
     original_height = 600
 
-    def __init__(self, labels_path):
-        self.labels, self.colors, self.connected_points = ConfigParser.parse_labels_file(labels_path)
+    def __init__(self):
+        self.__labels, self.__colors, self.__connected_points = [], [], []
 
         # paths to files
         self.load_description_path = ""
         self.load_video_path = ""
+        self.load_json_path = ""
 
         # different frames list
         self.original_frames = []
@@ -31,12 +32,16 @@ class GuiHolder:
         self.window = None
         self.layout = []
 
-        self.layout.append([psg.Text("Description file location:"),
-                            psg.In(size=(35, 1), enable_events=True, key="-FILE_DESCRIPTION-"),
+        self.layout.append([psg.Text("Json file location:"),
+                            psg.In(size=(30, 1), enable_events=True, key="-FILE_JSON-"),
                             psg.FileBrowse(),
+                            psg.Text("Description file location:"),
+                            psg.In(size=(30, 1), enable_events=True, key="-FILE_DESCRIPTION-"),
+                            psg.FileBrowse(disabled=True),
                             psg.Text("Video file location:"),
-                            psg.In(size=(35, 1), enable_events=True, key="-FILE_VIDEO-"),
-                            psg.FileBrowse()])
+                            psg.In(size=(30, 1), enable_events=True, key="-FILE_VIDEO-"),
+                            psg.FileBrowse(disabled=True)
+                            ])
         self.layout.append([psg.Button("Previous"), psg.Button("Play"), psg.Button("Next"),
                             psg.Button("Clear Selection", disabled=True, key="-CLEAR_SELECTION-"),
                             psg.Button("Save description", disabled=True, key="-SAVE_DESCRIPTION-"),
@@ -55,6 +60,8 @@ class GuiHolder:
         self.layout.append([psg.Button("Save description", disabled=True, key="-SAVE_DESCRIPTION-"),
                             psg.Button("Save video", disabled=True, key="-SAVE_VIDEO-")])
 
+        self.__description_button = self.layout[0][5]
+        self.__video_button = self.layout[0][8]
         self.__clear_button = self.layout[1][3]
         self.__slider = self.layout[1][6]
         self.__progress_bar = self.layout[3][0]
@@ -62,13 +69,25 @@ class GuiHolder:
         self.__graph = self.layout[4][1]
         self.__save_video = self.layout[1][5]
         self.__save_description = self.layout[1][4]
-        self.__graph_holder = GraphHolder.GraphHolder(graph=self.__graph, colors=self.colors,
-                                                      connected_points=self.connected_points)
+        self.__graph_holder = None
 
     def set_window(self, window):
         self.window = window
 
     # Methods which buttons call
+    def load_json_file(self, path):
+        if path is None:
+            psg.popup_error('File error', 'Path can not be None')
+            return
+        elif path == '' or path.strip() == '':
+            psg.popup_error('File error', 'Path can not be an empty string')
+            return
+        self.__labels, self.__colors, self.__connected_points = ConfigParser.parse_json_file(path)
+        self.load_json_path = path
+        self.__description_button.update(disabled=False)
+        self.__graph_holder = GraphHolder.GraphHolder(graph=self.__graph, colors=self.__colors,
+                                                      connected_points=self.__connected_points)
+
     def load_description_file(self, path):
         if path is None:
             psg.popup_error('File error', 'Path can not be None')
@@ -76,7 +95,7 @@ class GuiHolder:
         elif path == '' or path.strip() == '':
             psg.popup_error('File error', 'Path can not be an empty string')
             return
-        self.points_in_frames = Point.read_points_from_file(path, self.labels)
+        self.points_in_frames = Point.read_points_from_file_2(path, self.__labels)
         self.points_in_frames = Point.rough_interpolate(self.points_in_frames)
         self.load_description_path = path
         self.__slider.update(value=self.active_index, range=(0, len(self.points_in_frames) - 1), disabled=False)
@@ -84,6 +103,7 @@ class GuiHolder:
         self.__clear_button.update(disabled=False)
         self.__save_video.update(disabled=False)
         self.__save_description.update(disabled=False)
+        self.__video_button.update(disabled=False)
 
     def load_video_file(self, path):
         if path is None:
@@ -163,7 +183,7 @@ class GuiHolder:
         self.__graph_holder.selected_index = None
 
     def play(self):
-        pass
+        print(self.__colors)
 
     def pause(self):
         pass

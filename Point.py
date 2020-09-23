@@ -86,3 +86,34 @@ def rough_interpolate(frame_list):
         else:
             frame_list[i].set_points_list(copy.deepcopy(frame_list[last_working_index].points_list))
     return frame_list
+
+
+def read_points_from_file_2(path, labels):
+    handle = open(path, 'r')
+    frame_list = []
+    working_index = 0
+    for line in handle:
+        if "Frame" in line:
+            working_index = int(line.split(" ")[1][0:-2])
+            frame_list.append(Frame(working_index))
+        else:
+            splits = line.split(" ")
+            if len(splits) == 1:
+                continue
+            else:
+                for i in range(0, len(splits), 2):
+                    shape_index = int(splits[i])
+                    type_of_shape = splits[i+1][0]
+                    parameters = splits[i+1].strip()[2:-1].split(",")
+                    if type_of_shape == 'P':
+                        frame_list[working_index].append_point(Point(shape_index, int(parameters[0]),
+                                                                     int(parameters[1]), labels[i // 2]))
+                    elif type_of_shape == 'R':
+                        raise ValueError("Currently not supported")
+                    elif type_of_shape == 'C':
+                        raise ValueError("Currently not supported")
+                    else:
+                        raise ValueError("UNK")
+    handle.close()
+    return frame_list
+
