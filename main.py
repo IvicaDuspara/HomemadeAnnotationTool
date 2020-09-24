@@ -6,11 +6,17 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--description', help='Path to description file')
 parser.add_argument('-j', '--json', help='Path to .json file')
+args = parser.parse_args()
 
 c = GUI.GuiHolder()
 window = PSG.Window("Demo", c.layout, size=(1330, 900)).Finalize()
 window.maximize()
 c.set_window(window)
+if args.json is not None:
+    c.load_json_file(args.json)
+if args.description is not None:
+    c.load_description_file(args.description)
+
 
 # Create an event loop
 while True:
@@ -43,4 +49,6 @@ while True:
         c.move_point(values["-GRAPH-"])
     elif event == "-SAVE_DESCRIPTION-":
         c.save_description_file("./saved.txt")
+    elif event == "-SAVE_VIDEO-":
+        c.save_video_file("./out.mp4")
 window.close()
