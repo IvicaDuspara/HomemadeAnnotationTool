@@ -9,7 +9,7 @@ parser.add_argument('-j', '--json', help='Path to .json file')
 args = parser.parse_args()
 
 c = GUI.GuiHolder()
-window = PSG.Window("Demo", c.layout, size=(1330, 900)).Finalize()
+window = PSG.Window("Demo", c.layout, size=(1330, 900), return_keyboard_events=True).Finalize()
 window.maximize()
 c.set_window(window)
 if args.json is not None:
@@ -51,4 +51,12 @@ while True:
         c.save_description_file("./saved.txt")
     elif event == "-SAVE_VIDEO-":
         c.save_video_file("./out.mp4")
+    elif event == 'Up:111':
+        c.keyboard('up')
+    elif event == 'Down:116':
+        c.keyboard('down')
+    elif event == 'Left:113':
+        c.keyboard('left')
+    elif event == 'Right:114':
+        c.keyboard('right')
 window.close()

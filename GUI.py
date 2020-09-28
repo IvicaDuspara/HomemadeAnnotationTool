@@ -213,6 +213,36 @@ class GuiHolder:
     def pause(self):
         pass
 
+    def keyboard(self, key):
+        if self.__graph_holder.selected_index is None:
+            if key == 'up' or key == 'down':
+                return
+            elif key == 'left':
+                self.previous()
+            elif key == 'right':
+                self.next()
+        else:
+            point_ = self.points_in_frames[self.active_index].get_point(self.__graph_holder.selected_index)
+            new_sc1 = point_.sc1
+            new_sc2 = point_.sc2
+            if key == 'up':
+                new_sc2 = new_sc2 - 1
+                if new_sc2 < 0:
+                    new_sc2 = 0
+            elif key == 'down':
+                new_sc2 = new_sc2 + 1
+                if new_sc2 > self.display_height:
+                    new_sc2 = self.display_height
+            elif key == 'left':
+                new_sc1 = new_sc1 - 1
+                if new_sc1 < 0:
+                    new_sc1 = 0
+            elif key == 'right':
+                new_sc1 = new_sc1 + 1
+                if new_sc1 > self.display_width:
+                    new_sc1 = self.display_width
+            self.move_point((new_sc1, new_sc2))
+
     # Methods for upating gui
     def update_listbox(self):
         self.__listbox.update(values=self.points_in_frames[self.active_index].points_list)
