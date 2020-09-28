@@ -50,6 +50,7 @@ class GuiHolder:
                             psg.Button("Clear Selection", disabled=True, key="-CLEAR_SELECTION-"),
                             psg.Button("Save description", disabled=True, key="-SAVE_DESCRIPTION-"),
                             psg.Button("Save video", disabled=True, key="-SAVE_VIDEO-"),
+                            psg.Button("Save as images", disabled=True, key="-SAVE_AS_IMAGES-"),
                             psg.Slider(default_value=0, range=(0, 0), disabled=True, enable_events=True,
                                        orientation='horizontal',
                                        size=(75, 25), key="-FRAME_SLIDER-")])
@@ -64,15 +65,22 @@ class GuiHolder:
         self.layout.append([psg.Button("Save description", disabled=True, key="-SAVE_DESCRIPTION-"),
                             psg.Button("Save video", disabled=True, key="-SAVE_VIDEO-")])
 
+        # References/Names for GUI objects
+
         self.__description_button = self.layout[0][5]
         self.__video_button = self.layout[0][8]
+
         self.__clear_button = self.layout[1][3]
-        self.__slider = self.layout[1][6]
+        self.__save_description = self.layout[1][4]
+        self.__save_video = self.layout[1][5]
+        self.__save_as_images = self.layout[1][6]
+        self.__slider = self.layout[1][7]
+
         self.__progress_bar = self.layout[3][0]
+
         self.__listbox = self.layout[4][0]
         self.__graph = self.layout[4][1]
-        self.__save_video = self.layout[1][5]
-        self.__save_description = self.layout[1][4]
+
         self.__graph_holder = None
 
     def set_window(self, window):
@@ -105,7 +113,6 @@ class GuiHolder:
         self.__slider.update(value=self.active_index, range=(0, len(self.points_in_frames) - 1), disabled=False)
         self.update_listbox()
         self.__clear_button.update(disabled=False)
-        self.__save_video.update(disabled=False)
         self.__save_description.update(disabled=False)
         self.__video_button.update(disabled=False)
 
@@ -143,6 +150,8 @@ class GuiHolder:
             self.__progress_bar.update(frame_counter)
         self.__progress_bar.update(0, max=0, visible=False)
         self.__cap.release()
+        self.__save_video.update(disabled=False)
+        self.__save_as_images.update(disabled=False)
         self.displayed_frames = [None] * len(self.resized_frames)
         self.__listbox.update(disabled=False)
         self.update_listbox()
@@ -167,21 +176,22 @@ class GuiHolder:
         self.__rescale_points()
         video_out = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc(*'mp4v'), self.__frame_rate,
                                     (self.original_width, self.original_height))
+        self.__progress_bar.update(0, max=int(len(self.points_in_frames)), visible=True)
         for i in range(0, len(self.original_frames)):
-            working_image = copy.deepcopy(self.original_frames[i])
-            working_frame = self.points_in_frames[i]
-            for j in range(0, working_frame.size()):
-                working_point = working_frame.get_point(j)
-                working_image = cv2.circle(working_image, (working_point.c1, working_point.c2), 4,
-                                           self.__cv_colors[self.__colors[j]], -1)
-            for j in range(0, len(self.__connected_points)):
-                splits = self.__connected_points[j].split(",")
-                start_point = working_frame.get_point(int(splits[0]))
-                end_point = working_frame.get_point(int(splits[1]))
-                working_image = cv2.line(working_image, (start_point.c1, start_point.c2), (end_point.c1, end_point.c2),
-                                         self.__cv_colors[splits[2]], 1)
+            working_image = self.__draw_on_working_image(self.original_frames[i], self.points_in_frames[i])
             video_out.write(working_image)
+            self.__progress_bar.update(i)
         video_out.release()
+        self.__progress_bar.update(0, max=0, visible=False)
+
+    def save_as_images(self):
+        self.__rescale_points()
+        self.__progress_bar.update(0, max=int(len(self.points_in_frames)), visible=True)
+        for i in range(0, len(self.original_frames)):
+            working_image = self.__draw_on_working_image(self.original_frames[i], self.points_in_frames[i])
+            cv2.imwrite('./images/out' + str(i) + '.png', working_image)
+            self.__progress_bar.update(i)
+        self.__progress_bar.update(0, max=0, visible=True)
 
     def clear_selection(self):
         self.update_listbox()
@@ -243,7 +253,7 @@ class GuiHolder:
                     new_sc1 = self.display_width
             self.move_point((new_sc1, new_sc2))
 
-    # Methods for upating gui
+    # Methods for updating gui
     def update_listbox(self):
         self.__listbox.update(values=self.points_in_frames[self.active_index].points_list)
 
@@ -280,5 +290,16 @@ class GuiHolder:
                 working_point.c1 = int(sc1 * self.original_width / self.display_width)
                 working_point.c2 = int(sc2 * self.original_height / self.display_height)
 
-    def __rescale_frames(self):
-        self.__rescale_points()
+    def __draw_on_working_image(self, original_image, working_frame):
+        working_image = copy.deepcopy(original_image)
+        for j in range(0, working_frame.size()):
+            working_point = working_frame.get_point(j)
+            working_image = cv2.circle(working_image, (working_point.c1, working_point.c2), 4,
+                                       self.__cv_colors[self.__colors[j]], -1)
+        for j in range(0, len(self.__connected_points)):
+            splits = self.__connected_points[j].split(",")
+            start_point = working_frame.get_point(int(splits[0]))
+            end_point = working_frame.get_point(int(splits[1]))
+            working_image = cv2.line(working_image, (start_point.c1, start_point.c2), (end_point.c1, end_point.c2),
+                                     self.__cv_colors[splits[2]], 1)
+        return working_image

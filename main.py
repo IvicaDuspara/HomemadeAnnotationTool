@@ -1,8 +1,7 @@
-import cv2
 import PySimpleGUI as PSG
-import Point
 import GUI
 import argparse
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--description', help='Path to description file')
 parser.add_argument('-j', '--json', help='Path to .json file')
@@ -23,7 +22,7 @@ while True:
     event, values = window.read()
     # End program if user closes window or
     # presses the OK button
-    if event == "Bezveze" or event == PSG.WIN_CLOSED:
+    if event == PSG.WIN_CLOSED:
         break
     elif event == "-FILE_JSON-":
         c.load_json_file(values["-FILE_JSON-"])
@@ -51,6 +50,8 @@ while True:
         c.save_description_file("./saved.txt")
     elif event == "-SAVE_VIDEO-":
         c.save_video_file("./out.mp4")
+    elif event == "-SAVE_AS_IMAGES-":
+        c.save_as_images()
     elif event == 'Up:111':
         c.keyboard('up')
     elif event == 'Down:116':
