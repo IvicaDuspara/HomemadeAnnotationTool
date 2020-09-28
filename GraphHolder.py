@@ -24,15 +24,15 @@ class GraphHolder:
 
         for i in range(0, frame.size()):
             point_ = frame.get_point(i)
-            self.drawn_points.append(self.graph.DrawCircle((point_.sc1, point_.sc2), radius=4,
+            self.drawn_points.append(self.graph.DrawCircle((point_.scx, point_.scy), radius=4,
                                                            fill_color=self.colors[i]))
         counter = 0
         for item in self.connected_points:
             splits = item.split(",")
             start_point = frame.get_point(int(splits[0]))
             end_point = frame.get_point(int(splits[1]))
-            self.drawn_lines.append(self.graph.DrawLine(point_from=(start_point.sc1, start_point.sc2),
-                                                        point_to=(end_point.sc1, end_point.sc2),
+            self.drawn_lines.append(self.graph.DrawLine(point_from=(start_point.scx, start_point.scy),
+                                                        point_to=(end_point.scx, end_point.scy),
                                                         color=splits[2]))
             if int(splits[0]) not in self.lines_dictionary:
                 connected = [(int(splits[1]), counter)]
@@ -45,44 +45,44 @@ class GraphHolder:
         self.image_id = image_id
 
     def select_point(self, item, frame):
-        sc1 = item.sc1
-        sc2 = item.sc2
+        scx = item.scx
+        scy = item.scy
         if self.selected_index is None:
             self.selected_index = item.id_
             if item.id_ not in (0, len(self.drawn_points)):
                 print("OOF")
             self.graph.DeleteFigure(self.drawn_points[self.selected_index])
-            self.drawn_points[self.selected_index] = self.graph.DrawCircle((sc1, sc2), radius=4,
+            self.drawn_points[self.selected_index] = self.graph.DrawCircle((scx, scy), radius=4,
                                                                            fill_color=self.colors[self.selected_index],
                                                                            line_color="lime", line_width=2)
-            self.selected_text = self.graph.DrawText(item.get_my_label(), location=(sc1 - 10, sc2 - 10))
+            self.selected_text = self.graph.DrawText(item.get_my_label(), location=(scx - 10, scy - 10))
 
         else:
             # First three lines remove highlight from currently selected point.
             self.__delete_selected_point()
             point_ = frame.get_point(self.selected_index)
-            self.drawn_points[self.selected_index] = self.graph.DrawCircle((point_.sc1, point_.sc2), radius=4,
+            self.drawn_points[self.selected_index] = self.graph.DrawCircle((point_.scx, point_.scy), radius=4,
                                                                            fill_color=self.colors[self.selected_index])
             self.selected_index = item.id_
             self.graph.DeleteFigure(self.drawn_points[self.selected_index])
-            self.drawn_points[self.selected_index] = self.graph.DrawCircle((sc1, sc2), radius=4,
+            self.drawn_points[self.selected_index] = self.graph.DrawCircle((scx, scy), radius=4,
                                                                            fill_color=self.colors[self.selected_index],
                                                                            line_color="lime", line_width=2)
 
-            self.selected_text = self.graph.DrawText(item.get_my_label(), location=(sc1 - 10, sc2 - 10))
+            self.selected_text = self.graph.DrawText(item.get_my_label(), location=(scx - 10, scy - 10))
 
     def clear_selection(self, frame):
         if self.selected_index is None:
             return
-        sc1 = frame.get_point(self.selected_index).sc1
-        sc2 = frame.get_point(self.selected_index).sc2
+        scx = frame.get_point(self.selected_index).scx
+        scy = frame.get_point(self.selected_index).scy
         self.__delete_selected_point()
-        self.drawn_points[self.selected_index] = self.graph.DrawCircle((sc1, sc2), radius=4,
+        self.drawn_points[self.selected_index] = self.graph.DrawCircle((scx, scy), radius=4,
                                                                        fill_color=self.colors[self.selected_index])
         self.selected_index = None
         self.selected_text = None
 
-    def move_point(self, frame, new_sc1, new_sc2):
+    def move_point(self, frame, new_scx, new_scy):
         # delete old point
         if self.selected_index is None:
             return
@@ -100,13 +100,13 @@ class GraphHolder:
                     self.graph.DeleteFigure(self.drawn_lines[pair[1]])
 
         # Move selected point
-        frame.get_point(self.selected_index).set_scaled_coordinates(new_sc1, new_sc2)
+        frame.get_point(self.selected_index).set_scaled_coordinates(new_scx, new_scy)
         # Draw selected point again
-        self.drawn_points[self.selected_index] = self.graph.DrawCircle((new_sc1, new_sc2), radius=4,
+        self.drawn_points[self.selected_index] = self.graph.DrawCircle((new_scx, new_scy), radius=4,
                                                                        fill_color=self.colors[self.selected_index],
                                                                        line_color="lime", line_width=2)
         self.selected_text = self.graph.DrawText(frame.get_point(self.selected_index).get_my_label(),
-                                                 location=(new_sc1 - 10, new_sc2 - 10))
+                                                 location=(new_scx - 10, new_scy - 10))
         # Draw lines which start with moved point again
         if self.selected_index in self.lines_dictionary:
             for item in self.lines_dictionary[self.selected_index]:
@@ -114,9 +114,9 @@ class GraphHolder:
                 end_point = frame.get_point(item[0])
                 index_in_drawn_lines = item[1]
                 color = self.connected_points[index_in_drawn_lines].split(",")[2]
-                self.drawn_lines[index_in_drawn_lines] = self.graph.DrawLine(point_from=(start_point.sc1,
-                                                                                         start_point.sc2),
-                                                                             point_to=(end_point.sc1, end_point.sc2),
+                self.drawn_lines[index_in_drawn_lines] = self.graph.DrawLine(point_from=(start_point.scx,
+                                                                                         start_point.scy),
+                                                                             point_to=(end_point.scx, end_point.scy),
                                                                              color=color)
         for key, value in self.lines_dictionary.items():
             for pair in value:
@@ -125,10 +125,10 @@ class GraphHolder:
                     end_point = frame.get_point(self.selected_index)
                     index_in_drawn_lines = pair[1]
                     color = self.connected_points[index_in_drawn_lines].split(",")[2]
-                    self.drawn_lines[index_in_drawn_lines] = self.graph.DrawLine(point_from=(start_point.sc1,
-                                                                                             start_point.sc2),
-                                                                                 point_to=(end_point.sc1,
-                                                                                           end_point.sc2),
+                    self.drawn_lines[index_in_drawn_lines] = self.graph.DrawLine(point_from=(start_point.scx,
+                                                                                             start_point.scy),
+                                                                                 point_to=(end_point.scx,
+                                                                                           end_point.scy),
                                                                                  color=color)
 
     # Private methods

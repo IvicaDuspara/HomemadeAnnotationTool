@@ -140,8 +140,8 @@ class GuiHolder:
                 self.original_height = height
                 imS = cv2.resize(frame, (GuiHolder.display_width, GuiHolder.display_height))
                 for PIF in working_list.points_list:
-                    PIF.set_scaled_coordinates(int(PIF.c1 * GuiHolder.display_width / width),
-                                               int(PIF.c2 * GuiHolder.display_height / height))
+                    PIF.set_scaled_coordinates(int(PIF.x * GuiHolder.display_width / width),
+                                               int(PIF.y * GuiHolder.display_height / height))
                 self.original_frames.append(frame)
                 self.resized_frames.append(imS)
             else:
@@ -164,7 +164,7 @@ class GuiHolder:
             temp_string = ""
             for j in range(0, self.points_in_frames[i].size()):
                 working_point = self.points_in_frames[i].get_point(j)
-                temp_string += str(working_point.id_) + " P(" + str(working_point.sc1) + "," + str(working_point.sc2) + ")"
+                temp_string += str(working_point.id_) + " P(" + str(working_point.scx) + "," + str(working_point.scy) + ")"
                 if j != self.points_in_frames[i].size() - 1:
                     temp_string += " "
                 else:
@@ -233,25 +233,25 @@ class GuiHolder:
                 self.next()
         else:
             point_ = self.points_in_frames[self.active_index].get_point(self.__graph_holder.selected_index)
-            new_sc1 = point_.sc1
-            new_sc2 = point_.sc2
+            new_scx = point_.scx
+            new_scy = point_.scy
             if key == 'up':
-                new_sc2 = new_sc2 - 1
-                if new_sc2 < 0:
-                    new_sc2 = 0
+                new_scy = new_scy - 1
+                if new_scy < 0:
+                    new_scy = 0
             elif key == 'down':
-                new_sc2 = new_sc2 + 1
-                if new_sc2 > self.display_height:
-                    new_sc2 = self.display_height
+                new_scy = new_scy + 1
+                if new_scy > self.display_height:
+                    new_scy = self.display_height
             elif key == 'left':
-                new_sc1 = new_sc1 - 1
-                if new_sc1 < 0:
-                    new_sc1 = 0
+                new_scx = new_scx - 1
+                if new_scx < 0:
+                    new_scx = 0
             elif key == 'right':
-                new_sc1 = new_sc1 + 1
-                if new_sc1 > self.display_width:
-                    new_sc1 = self.display_width
-            self.move_point((new_sc1, new_sc2))
+                new_scx = new_scx + 1
+                if new_scx > self.display_width:
+                    new_scx = self.display_width
+            self.move_point((new_scx, new_scy))
 
     # Methods for updating gui
     def update_listbox(self):
@@ -275,9 +275,9 @@ class GuiHolder:
         self.__graph_holder.select_point(item, self.points_in_frames[self.active_index])
 
     def move_point(self, coordinates):
-        new_sc1 = int(coordinates[0])
-        new_sc2 = int(coordinates[1])
-        self.__graph_holder.move_point(self.points_in_frames[self.active_index], new_sc1, new_sc2)
+        new_scx = int(coordinates[0])
+        new_scy = int(coordinates[1])
+        self.__graph_holder.move_point(self.points_in_frames[self.active_index], new_scx, new_scy)
         self.update_listbox()
 
     # Private methods
@@ -285,21 +285,21 @@ class GuiHolder:
         for frame in self.points_in_frames:
             for i in range(0, frame.size()):
                 working_point = frame.get_point(i)
-                sc1 = working_point.sc1
-                sc2 = working_point.sc2
-                working_point.c1 = int(sc1 * self.original_width / self.display_width)
-                working_point.c2 = int(sc2 * self.original_height / self.display_height)
+                scx = working_point.scx
+                scy = working_point.scy
+                working_point.x = int(scx * self.original_width / self.display_width)
+                working_point.y = int(scy * self.original_height / self.display_height)
 
     def __draw_on_working_image(self, original_image, working_frame):
         working_image = copy.deepcopy(original_image)
         for j in range(0, working_frame.size()):
             working_point = working_frame.get_point(j)
-            working_image = cv2.circle(working_image, (working_point.c1, working_point.c2), 4,
+            working_image = cv2.circle(working_image, (working_point.x, working_point.y), 4,
                                        self.__cv_colors[self.__colors[j]], -1)
         for j in range(0, len(self.__connected_points)):
             splits = self.__connected_points[j].split(",")
             start_point = working_frame.get_point(int(splits[0]))
             end_point = working_frame.get_point(int(splits[1]))
-            working_image = cv2.line(working_image, (start_point.c1, start_point.c2), (end_point.c1, end_point.c2),
+            working_image = cv2.line(working_image, (start_point.x, start_point.y), (end_point.x, end_point.y),
                                      self.__cv_colors[splits[2]], 1)
         return working_image

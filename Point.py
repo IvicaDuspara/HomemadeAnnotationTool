@@ -2,23 +2,23 @@ import copy
 
 
 class Point:
-    def __init__(self, id_, c1, c2, label):
+    def __init__(self, id_, x, y, label):
         self.id_ = id_
-        self.c1 = c1
-        self.c2 = c2
-        self.sc1 = c1
-        self.sc2 = c2
+        self.x = x
+        self.y = y
+        self.scx = x
+        self.scy = y
         self.label = label
 
     def __str__(self):
-        return str(self.label) + " " + "(" + str(self.id_) + "," + str(self.sc1) + "," + str(self.sc2) + ")"
+        return str(self.label) + " " + "(" + str(self.id_) + "," + str(self.scx) + "," + str(self.scy) + ")"
 
     def __repr__(self):
         return str(self)
 
-    def set_scaled_coordinates(self, sc1, sc2):
-        self.sc1 = sc1
-        self.sc2 = sc2
+    def set_scaled_coordinates(self, scx, scy):
+        self.scx = scx
+        self.scy = scy
 
     def get_my_label(self):
         return self.label
