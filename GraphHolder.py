@@ -1,5 +1,5 @@
 class GraphHolder:
-    def __init__(self, graph, colors, connected_points):
+    def __init__(self, graph, colors, connected_points, defaulted_color):
         self.graph = graph
         self.image_id = None
         self.drawn_points = []
@@ -9,6 +9,7 @@ class GraphHolder:
         self.selected_text = None
         self.colors = colors
         self.connected_points = connected_points
+        self.defaulted_color = defaulted_color
 
     def draw_image(self, image, frame):
         if self.image_id is not None:
@@ -21,7 +22,6 @@ class GraphHolder:
         self.drawn_points = []
         self.drawn_lines = []
         self.lines_dictionary = {}
-
         for i in range(0, frame.size()):
             point_ = frame.get_point(i)
             self.drawn_points.append(self.graph.DrawCircle((point_.scx, point_.scy), radius=4,

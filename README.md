@@ -87,7 +87,6 @@ This is a TODO list. These features are planned and will be coming
 to HAT eventually.
 
 High Priority:
- + Specify .json file location. This is currently hardcoded.
  + Specify simpler json file which would only have labels. Colors
    would be defaulted while lines would not be drawn
  + Specify location of saved description file and saved video

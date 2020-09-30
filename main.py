@@ -60,4 +60,10 @@ while True:
         c.keyboard('left')
     elif event == 'Right:114':
         c.keyboard('right')
+    elif event == '-Radio_S-':
+        c.set_status(1)
+    elif event == '-Radio_F-':
+        c.set_status(2)
+    elif event == '-Radio_U-':
+        c.set_status(3)
 window.close()

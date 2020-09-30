@@ -1,9 +1,18 @@
+import Constants
 import Point
 import GraphHolder
 import cv2
 import PySimpleGUI as psg
 import ConfigParser
 import copy
+
+
+def check_maximum_index(list_of_frames):
+    maximum = 0
+    for i in range(0, len(list_of_frames)):
+        size = list_of_frames[i].size()
+        maximum = max(maximum, size)
+    return maximum
 
 
 class GuiHolder:
@@ -57,14 +66,21 @@ class GuiHolder:
         self.layout.append([psg.HorizontalSeparator()])
         self.layout.append([psg.ProgressBar(max_value=0, orientation='horizontal', bar_color=('green', 'white'),
                                             visible=False, size=(100, 15))])
-        self.layout.append([psg.Listbox(values=[], key="-LIST-", size=(50, 150),
+        self.__column_layout = [[psg.Radio("Satisfactory", group_id=1, default=False, enable_events=True,
+                                           key='-Radio_S-')],
+                               [psg.Radio("Needs fixing", group_id=1, default=False, enable_events=True,
+                                          key="-Radio_F-")],
+                               [psg.Radio("Undecided", group_id=1, default=True, enable_events=True,
+                                          key="-Radio_U-")]]
+        self.layout.append([psg.Listbox(values=[], key="-LIST-", size=(35, 35),
                                         select_mode="LISTBOX_SELECT_MODE_SINGLE",
                                         enable_events=True, disabled=True),
                             psg.Graph((800, 600), (0, 600), (800, 0), enable_events=True, key="-GRAPH-",
-                                      border_width=5, visible=True, drag_submits=True, background_color='white')])
-        self.layout.append([psg.Button("Save description", disabled=True, key="-SAVE_DESCRIPTION-"),
-                            psg.Button("Save video", disabled=True, key="-SAVE_VIDEO-")])
-
+                                      border_width=5, visible=True, drag_submits=True, background_color='white'),
+                            psg.Column(layout=self.__column_layout,
+                                       visible=True,
+                                       key="-COLUMN-",
+                                       vertical_alignment='top', element_justification='center')])
         # References/Names for GUI objects
 
         self.__description_button = self.layout[0][5]
@@ -80,6 +96,10 @@ class GuiHolder:
 
         self.__listbox = self.layout[4][0]
         self.__graph = self.layout[4][1]
+        self.__column = self.layout[4][2]
+        self.__radio_s = self.__column_layout[0][0]
+        self.__radio_f = self.__column_layout[1][0]
+        self.__radio_u = self.__column_layout[2][0]
 
         self.__graph_holder = None
 
@@ -95,10 +115,13 @@ class GuiHolder:
             psg.popup_error('File error', 'Path can not be an empty string')
             return
         self.__labels, self.__colors, self.__connected_points = ConfigParser.parse_json_file(path)
+        d_color = False
+        if len(self.__colors) == 0:
+            d_color = True
         self.load_json_path = path
         self.__description_button.update(disabled=False)
         self.__graph_holder = GraphHolder.GraphHolder(graph=self.__graph, colors=self.__colors,
-                                                      connected_points=self.__connected_points)
+                                                      connected_points=self.__connected_points, defaulted_color=d_color)
 
     def load_description_file(self, path):
         if path is None:
@@ -109,6 +132,10 @@ class GuiHolder:
             return
         self.points_in_frames = Point.read_points_from_file_2(path, self.__labels)
         self.points_in_frames = Point.rough_interpolate(self.points_in_frames)
+        max_frame = check_maximum_index(self.points_in_frames)
+        if self.__graph_holder.defaulted_color:
+            colors = ['blue'] * max_frame
+            self.__graph_holder.colors = colors
         self.load_description_path = path
         self.__slider.update(value=self.active_index, range=(0, len(self.points_in_frames) - 1), disabled=False)
         self.update_listbox()
@@ -218,7 +245,7 @@ class GuiHolder:
         self.__graph_holder.selected_index = None
 
     def play(self):
-        pass
+        print("Unutar p: " + str(self.__graph_holder.colors))
 
     def pause(self):
         pass
@@ -270,6 +297,13 @@ class GuiHolder:
             imgbytes = cv2.imencode(".png", self.resized_frames[self.active_index])[1].tobytes()
             self.displayed_frames[self.active_index] = imgbytes
         self.__graph_holder.draw_image(self.displayed_frames[self.active_index], self.points_in_frames[self.active_index])
+        working_radio_value = self.points_in_frames[self.active_index].status
+        if working_radio_value == 1:
+            self.__radio_s.update(value=True)
+        elif working_radio_value == 2:
+            self.__radio_f.update(value=True)
+        elif working_radio_value == 3:
+            self.__radio_u.update(value=True)
 
     def listbox_item_selected(self, item):
         self.__graph_holder.select_point(item, self.points_in_frames[self.active_index])
@@ -279,6 +313,14 @@ class GuiHolder:
         new_scy = int(coordinates[1])
         self.__graph_holder.move_point(self.points_in_frames[self.active_index], new_scx, new_scy)
         self.update_listbox()
+
+    def set_status(self, number):
+        if number == 1:
+            self.points_in_frames[self.active_index].status = 1
+        elif number == 2:
+            self.points_in_frames[self.active_index].status = 2
+        elif number == 3:
+            self.points_in_frames[self.active_index].status = 3
 
     # Private methods
     def __rescale_points(self):

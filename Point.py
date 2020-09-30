@@ -1,4 +1,11 @@
 import copy
+from enum import Enum, unique
+
+
+class Flag(Enum):
+    Satisfactory = 1
+    Needs_Fixing = 2
+    Undecided = 3
 
 
 class Point:
@@ -28,12 +35,16 @@ class Frame:
     def __init__(self, frame_id):
         self.frame_id = frame_id
         self.points_list = []
+        self.status = Flag.Undecided
 
     def append_point(self, point):
         self.points_list.append(point)
 
     def set_points_list(self, points_list):
         self.points_list = points_list
+
+    def set_status(self, status):
+        self.status = status
 
     def get_point(self, index):
         return self.points_list[index]
