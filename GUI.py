@@ -35,12 +35,12 @@ class GuiHolder:
         self.resized_frames = []
 
         self.all_frames = []
-        self.completed_frames = []
-        self.to_fix_frames = []
-        self.undecided_frames = []
+        self.__completed_frames = []
+        self.__to_fix_frames = []
+        self.__undecided_frames = []
         self.displayed_frames = []
 
-        self.points_in_all_frames = []
+        self.__points_in_all_frames = []
         self.__points_in_completed_frames = []
         self.__points_in_to_fix_frames = []
         self.__points_in_undecided_frames = []
@@ -142,16 +142,16 @@ class GuiHolder:
         elif path == '' or path.strip() == '':
             psg.popup_error('File error', 'Path can not be an empty string')
             return
-        self.points_in_all_frames = Point.read_points_from_file_2(path, self.__labels)
-        self.points_in_all_frames = Point.rough_interpolate(self.points_in_all_frames)
-        self.displayed_points = self.points_in_all_frames
+        self.__points_in_all_frames = Point.read_points_from_file_2(path, self.__labels)
+        self.__points_in_all_frames = Point.rough_interpolate(self.__points_in_all_frames)
+        self.displayed_points = self.__points_in_all_frames
         self.active_index = self.__all_index
-        max_frame = check_maximum_index(self.points_in_all_frames)
+        max_frame = check_maximum_index(self.__points_in_all_frames)
         if self.__graph_holder.defaulted_color:
             colors = ['blue'] * max_frame
             self.__graph_holder.colors = colors
         self.load_description_path = path
-        self.__slider.update(value=self.active_index, range=(0, len(self.points_in_all_frames) - 1), disabled=False)
+        self.__slider.update(value=self.active_index, range=(0, len(self.__points_in_all_frames) - 1), disabled=False)
         self.update_listbox()
         self.__clear_button.update(disabled=False)
         self.__save_description.update(disabled=False)
@@ -171,11 +171,11 @@ class GuiHolder:
         self.__cap = cv2.VideoCapture(path)
         self.__frame_rate = self.__cap.get(cv2.CAP_PROP_FPS)
         frame_counter = 0
-        self.__progress_bar.update(frame_counter, max=int(len(self.points_in_all_frames)), visible=True)
+        self.__progress_bar.update(frame_counter, max=int(len(self.__points_in_all_frames)), visible=True)
         while self.__cap.isOpened():
             ret, frame = self.__cap.read()
             if ret:
-                working_list = self.points_in_all_frames[frame_counter]
+                working_list = self.__points_in_all_frames[frame_counter]
                 height, width, channel = frame.shape
                 self.original_width = width
                 self.original_height = height
@@ -205,13 +205,13 @@ class GuiHolder:
 
     def save_description_file(self, filename):
         file = open(filename, 'w')
-        for i in range(0, len(self.points_in_all_frames)):
+        for i in range(0, len(self.__points_in_all_frames)):
             file.write("Frame " + str(i) + ":\n")
             temp_string = ""
-            for j in range(0, self.points_in_all_frames[i].size()):
-                working_point = self.points_in_all_frames[i].get_point(j)
+            for j in range(0, self.__points_in_all_frames[i].size()):
+                working_point = self.__points_in_all_frames[i].get_point(j)
                 temp_string += str(working_point.id_) + " P(" + str(working_point.scx) + "," + str(working_point.scy) + ")"
-                if j != self.points_in_all_frames[i].size() - 1:
+                if j != self.__points_in_all_frames[i].size() - 1:
                     temp_string += " "
                 else:
                     temp_string += "\n"
@@ -222,9 +222,9 @@ class GuiHolder:
         self.__rescale_points()
         video_out = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc(*'mp4v'), self.__frame_rate,
                                     (self.original_width, self.original_height))
-        self.__progress_bar.update(0, max=int(len(self.points_in_all_frames)), visible=True)
+        self.__progress_bar.update(0, max=int(len(self.__points_in_all_frames)), visible=True)
         for i in range(0, len(self.original_frames)):
-            working_image = self.__draw_on_working_image(self.original_frames[i], self.points_in_all_frames[i])
+            working_image = self.__draw_on_working_image(self.original_frames[i], self.__points_in_all_frames[i])
             video_out.write(working_image)
             self.__progress_bar.update(i)
         video_out.release()
@@ -232,16 +232,16 @@ class GuiHolder:
 
     def save_as_images(self):
         self.__rescale_points()
-        self.__progress_bar.update(0, max=int(len(self.points_in_all_frames)), visible=True)
+        self.__progress_bar.update(0, max=int(len(self.__points_in_all_frames)), visible=True)
         for i in range(0, len(self.original_frames)):
-            working_image = self.__draw_on_working_image(self.original_frames[i], self.points_in_all_frames[i])
+            working_image = self.__draw_on_working_image(self.original_frames[i], self.__points_in_all_frames[i])
             cv2.imwrite('./images/out' + str(i) + '.png', working_image)
             self.__progress_bar.update(i)
         self.__progress_bar.update(0, max=0, visible=True)
 
     def clear_selection(self):
         self.update_listbox()
-        self.__graph_holder.clear_selection(self.points_in_all_frames[self.active_index])
+        self.__graph_holder.clear_selection(self.__points_in_all_frames[self.active_index])
 
     def next(self):
         if self.active_index == len(self.displayed_frames) - 1:
@@ -264,9 +264,7 @@ class GuiHolder:
         self.__graph_holder.selected_index = None
 
     def play(self):
-        print("Unutar UD Framesa:\n" + str(self.__points_in_undecided_frames))
-        print("Unutar FIX Framesa:\n" + str(self.__points_in_to_fix_frames))
-        print("Unutar completed Framesa:\n" + str(self.__points_in_completed_frames))
+        pass
 
     def pause(self):
         pass
@@ -280,7 +278,7 @@ class GuiHolder:
             elif key == 'right':
                 self.next()
         else:
-            point_ = self.points_in_all_frames[self.active_index].get_point(self.__graph_holder.selected_index)
+            point_ = self.__points_in_all_frames[self.active_index].get_point(self.__graph_holder.selected_index)
             new_scx = point_.scx
             new_scy = point_.scy
             if key == 'up':
@@ -316,14 +314,6 @@ class GuiHolder:
         self.update_listbox()
         self.update_displayed_frame()
 
-    """def update_displayed_frame(self):
-        if self.all_frames[self.active_index] is None:
-            imgbytes = cv2.imencode(".png", self.resized_frames[self.active_index])[1].tobytes()
-            self.all_frames[self.active_index] = imgbytes
-        self.__graph_holder.draw_image(self.all_frames[self.active_index],
-                                       self.points_in_all_frames[self.active_index])
-        self.__radio_buttons[self.points_in_all_frames[self.active_index].status - 1].update(value=True)"""
-
     def update_displayed_frame(self):
         if len(self.displayed_frames) == 0:
             self.__graph.update(visible=False)
@@ -338,37 +328,37 @@ class GuiHolder:
             self.__radio_buttons[self.displayed_points[self.active_index].status - 1].update(value=True)
 
     def listbox_item_selected(self, item):
-        self.__graph_holder.select_point(item, self.points_in_all_frames[self.active_index])
+        self.__graph_holder.select_point(item, self.__points_in_all_frames[self.active_index])
 
     def move_point(self, coordinates):
         new_scx = int(coordinates[0])
         new_scy = int(coordinates[1])
-        self.__graph_holder.move_point(self.points_in_all_frames[self.active_index], new_scx, new_scy)
+        self.__graph_holder.move_point(self.__points_in_all_frames[self.active_index], new_scx, new_scy)
         self.update_listbox()
 
     def set_status(self, number):
-        old_status = self.points_in_all_frames[self.active_index].status
-        id_ = self.points_in_all_frames[self.active_index].frame_id
+        old_status = self.__points_in_all_frames[self.active_index].status
+        id_ = self.__points_in_all_frames[self.active_index].frame_id
         self.__remove_specific(id_, old_status)
-        self.points_in_all_frames[self.active_index].status = number
+        self.__points_in_all_frames[self.active_index].status = number
         self.__radio_buttons[number - 1].update(value=True)
         self.__id_insert(id_, number)
 
     def change_display(self, value):
         if value == 'All':
             self.displayed_frames = self.all_frames
-            self.displayed_points = self.points_in_all_frames
+            self.displayed_points = self.__points_in_all_frames
             self.active_index = self.__all_index
         elif value == 'Need fixing':
-            self.displayed_frames = self.to_fix_frames
+            self.displayed_frames = self.__to_fix_frames
             self.displayed_points = self.__points_in_to_fix_frames
             self.active_index = self.__to_fix_index
         elif value == 'Undecided':
-            self.displayed_frames = self.undecided_frames
+            self.displayed_frames = self.__undecided_frames
             self.displayed_points = self.__points_in_undecided_frames
             self.active_index = self.__to_fix_index
         elif value == 'Completed':
-            self.displayed_frames = self.completed_frames
+            self.displayed_frames = self.__completed_frames
             self.displayed_points = self.__points_in_completed_frames
             self.active_index = self.__completed_index
         self.__slider.update(value=self.active_index, range=(0, len(self.displayed_frames) - 1))
@@ -377,7 +367,7 @@ class GuiHolder:
 
     # Private methods
     def __rescale_points(self):
-        for frame in self.points_in_all_frames:
+        for frame in self.__points_in_all_frames:
             for i in range(0, frame.size()):
                 working_point = frame.get_point(i)
                 scx = working_point.scx
@@ -403,13 +393,13 @@ class GuiHolder:
         working_display_list = None
         working_points_list = None
         if old_status == 1:
-            working_display_list = self.completed_frames
+            working_display_list = self.__completed_frames
             working_points_list = self.__points_in_completed_frames
         elif old_status == 2:
-            working_display_list = self.to_fix_frames
+            working_display_list = self.__to_fix_frames
             working_points_list = self.__points_in_to_fix_frames
         elif old_status == 3:
-            working_display_list = self.undecided_frames
+            working_display_list = self.__undecided_frames
             working_points_list = self.__points_in_undecided_frames
         for i in range(0, len(working_points_list)):
             if working_points_list[i].frame_id == id_:
@@ -421,21 +411,21 @@ class GuiHolder:
         working_display_list = None
         working_points_list = None
         if new_status == 1:
-            working_display_list = self.completed_frames
+            working_display_list = self.__completed_frames
             working_points_list = self.__points_in_completed_frames
         elif new_status == 2:
-            working_display_list = self.to_fix_frames
+            working_display_list = self.__to_fix_frames
             working_points_list = self.__points_in_to_fix_frames
         elif new_status == 3:
-            working_display_list = self.undecided_frames
+            working_display_list = self.__undecided_frames
             working_points_list = self.__points_in_undecided_frames
         insertion_flag = 0
         for i in range(0, len(working_points_list)):
             if working_points_list[i].frame_id > id_:
-                working_points_list.insert(i, self.points_in_all_frames[id_])
+                working_points_list.insert(i, self.__points_in_all_frames[id_])
                 working_display_list.insert(i, self.all_frames[id_])
                 insertion_flag = 1
                 break
         if insertion_flag == 0:
-            working_points_list.append(self.points_in_all_frames[id_])
+            working_points_list.append(self.__points_in_all_frames[id_])
             working_display_list.append(self.all_frames[id_])
