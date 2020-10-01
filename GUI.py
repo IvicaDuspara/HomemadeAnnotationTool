@@ -91,10 +91,8 @@ class GuiHolder:
                                         select_mode="LISTBOX_SELECT_MODE_SINGLE",
                                         enable_events=True, disabled=True),
                             psg.Graph((800, 600), (0, 600), (800, 0), enable_events=True, key="-GRAPH-",
-                                      border_width=5, visible=True, drag_submits=True, background_color='white'),
-                            psg.Column(layout=self.__column_layout,
-                                       visible=True,
-                                       key="-COLUMN-",
+                                      border_width=5, visible=True, drag_submits=True, background_color='white')])
+        self.layout.append([psg.Column(layout=self.__column_layout, visible=True, key='-COLUMN-',
                                        vertical_alignment='top', element_justification='center')])
         # References/Names for GUI objects
 
@@ -111,7 +109,7 @@ class GuiHolder:
 
         self.__listbox = self.layout[4][0]
         self.__graph = self.layout[4][1]
-        self.__column = self.layout[4][2]
+        self.__column = self.layout[5][0]
         self.__radio_buttons = [self.__column_layout[0][0], self.__column_layout[1][0], self.__column_layout[2][0]]
         self.__combo = self.__column_layout[3][0]
 
