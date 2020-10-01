@@ -1,4 +1,3 @@
-import Constants
 import Point
 import GraphHolder
 import cv2
@@ -97,9 +96,7 @@ class GuiHolder:
         self.__listbox = self.layout[4][0]
         self.__graph = self.layout[4][1]
         self.__column = self.layout[4][2]
-        self.__radio_s = self.__column_layout[0][0]
-        self.__radio_f = self.__column_layout[1][0]
-        self.__radio_u = self.__column_layout[2][0]
+        self.__radio_buttons = [self.__column_layout[0][0], self.__column_layout[1][0], self.__column_layout[2][0]]
 
         self.__graph_holder = None
 
@@ -296,14 +293,9 @@ class GuiHolder:
         if self.displayed_frames[self.active_index] is None:
             imgbytes = cv2.imencode(".png", self.resized_frames[self.active_index])[1].tobytes()
             self.displayed_frames[self.active_index] = imgbytes
-        self.__graph_holder.draw_image(self.displayed_frames[self.active_index], self.points_in_frames[self.active_index])
-        working_radio_value = self.points_in_frames[self.active_index].status
-        if working_radio_value == 1:
-            self.__radio_s.update(value=True)
-        elif working_radio_value == 2:
-            self.__radio_f.update(value=True)
-        elif working_radio_value == 3:
-            self.__radio_u.update(value=True)
+        self.__graph_holder.draw_image(self.displayed_frames[self.active_index],
+                                       self.points_in_frames[self.active_index])
+        self.__radio_buttons[self.points_in_frames[self.active_index].status - 1].update(value=True)
 
     def listbox_item_selected(self, item):
         self.__graph_holder.select_point(item, self.points_in_frames[self.active_index])
@@ -315,12 +307,8 @@ class GuiHolder:
         self.update_listbox()
 
     def set_status(self, number):
-        if number == 1:
-            self.points_in_frames[self.active_index].status = 1
-        elif number == 2:
-            self.points_in_frames[self.active_index].status = 2
-        elif number == 3:
-            self.points_in_frames[self.active_index].status = 3
+        self.points_in_frames[self.active_index].status = number
+        self.__radio_buttons[number - 1].update(value=True)
 
     # Private methods
     def __rescale_points(self):

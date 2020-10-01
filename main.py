@@ -1,5 +1,6 @@
 import PySimpleGUI as PSG
 import GUI
+import Constants
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -61,9 +62,9 @@ while True:
     elif event == 'Right:114':
         c.keyboard('right')
     elif event == '-Radio_S-':
-        c.set_status(1)
+        c.set_status(Constants.flag_done)
     elif event == '-Radio_F-':
-        c.set_status(2)
+        c.set_status(Constants.flag_fix)
     elif event == '-Radio_U-':
-        c.set_status(3)
+        c.set_status(Constants.flag_undecided)
 window.close()
