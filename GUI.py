@@ -33,10 +33,14 @@ class GuiHolder:
         # different frames list
         self.original_frames = []
         self.resized_frames = []
+        self.all_frames = []
+        self.completed_frames = []
+        self.to_fix_frames = []
+        self.undecided_frames = []
         self.displayed_frames = []
         self.points_in_frames = []
 
-        self.active_index = 0
+        self.active_all_index = 0
 
         # other
         self.__cap = None
@@ -66,11 +70,13 @@ class GuiHolder:
         self.layout.append([psg.ProgressBar(max_value=0, orientation='horizontal', bar_color=('green', 'white'),
                                             visible=False, size=(100, 15))])
         self.__column_layout = [[psg.Radio("Satisfactory", group_id=1, default=False, enable_events=True,
-                                           key='-Radio_S-')],
-                               [psg.Radio("Needs fixing", group_id=1, default=False, enable_events=True,
-                                          key="-Radio_F-")],
-                               [psg.Radio("Undecided", group_id=1, default=True, enable_events=True,
-                                          key="-Radio_U-")]]
+                                           key='-Radio_S-', disabled=True)],
+                                [psg.Radio("Needs fixing", group_id=1, default=False, enable_events=True,
+                                           key="-Radio_F-", disabled=True)],
+                                [psg.Radio("Undecided", group_id=1, default=True, enable_events=True,
+                                           key="-Radio_U-", disabled=True)],
+                                [psg.Combo(values=('All', 'Completed', 'Need fixing', 'Undecided'),
+                                           default_value='All', enable_events=True, key='-COMBO-', disabled=True)]]
         self.layout.append([psg.Listbox(values=[], key="-LIST-", size=(35, 35),
                                         select_mode="LISTBOX_SELECT_MODE_SINGLE",
                                         enable_events=True, disabled=True),
@@ -97,6 +103,7 @@ class GuiHolder:
         self.__graph = self.layout[4][1]
         self.__column = self.layout[4][2]
         self.__radio_buttons = [self.__column_layout[0][0], self.__column_layout[1][0], self.__column_layout[2][0]]
+        self.__combo = self.__column_layout[3][0]
 
         self.__graph_holder = None
 
@@ -134,7 +141,7 @@ class GuiHolder:
             colors = ['blue'] * max_frame
             self.__graph_holder.colors = colors
         self.load_description_path = path
-        self.__slider.update(value=self.active_index, range=(0, len(self.points_in_frames) - 1), disabled=False)
+        self.__slider.update(value=self.active_all_index, range=(0, len(self.points_in_frames) - 1), disabled=False)
         self.update_listbox()
         self.__clear_button.update(disabled=False)
         self.__save_description.update(disabled=False)
@@ -176,7 +183,11 @@ class GuiHolder:
         self.__cap.release()
         self.__save_video.update(disabled=False)
         self.__save_as_images.update(disabled=False)
-        self.displayed_frames = [None] * len(self.resized_frames)
+        self.__radio_buttons[0].update(disabled=False)
+        self.__radio_buttons[1].update(disabled=False)
+        self.__radio_buttons[2].update(disabled=False)
+        self.__combo.update(disabled=False)
+        self.all_frames = [None] * len(self.resized_frames)
         self.__listbox.update(disabled=False)
         self.update_listbox()
         self.update_displayed_frame()
@@ -219,26 +230,26 @@ class GuiHolder:
 
     def clear_selection(self):
         self.update_listbox()
-        self.__graph_holder.clear_selection(self.points_in_frames[self.active_index])
+        self.__graph_holder.clear_selection(self.points_in_frames[self.active_all_index])
 
     def next(self):
-        if self.active_index == len(self.displayed_frames) - 1:
-            self.active_index = 0
+        if self.active_all_index == len(self.all_frames) - 1:
+            self.active_all_index = 0
         else:
-            self.active_index += 1
+            self.active_all_index += 1
         self.update_listbox()
         self.update_displayed_frame()
-        self.update_slider(self.active_index)
+        self.update_slider(self.active_all_index)
         self.__graph_holder.selected_index = None
 
     def previous(self):
-        if self.active_index == 0:
-            self.active_index = len(self.displayed_frames) - 1
+        if self.active_all_index == 0:
+            self.active_all_index = len(self.all_frames) - 1
         else:
-            self.active_index -= 1
+            self.active_all_index -= 1
         self.update_listbox()
         self.update_displayed_frame()
-        self.update_slider(self.active_index)
+        self.update_slider(self.active_all_index)
         self.__graph_holder.selected_index = None
 
     def play(self):
@@ -256,7 +267,7 @@ class GuiHolder:
             elif key == 'right':
                 self.next()
         else:
-            point_ = self.points_in_frames[self.active_index].get_point(self.__graph_holder.selected_index)
+            point_ = self.points_in_frames[self.active_all_index].get_point(self.__graph_holder.selected_index)
             new_scx = point_.scx
             new_scy = point_.scy
             if key == 'up':
@@ -279,36 +290,40 @@ class GuiHolder:
 
     # Methods for updating gui
     def update_listbox(self):
-        self.__listbox.update(values=self.points_in_frames[self.active_index].points_list)
+        self.__listbox.update(values=self.points_in_frames[self.active_all_index].points_list)
 
     def update_slider(self, value):
         self.__slider.update(value=value)
 
     def slider_moved(self, value):
-        self.active_index = value
+        self.active_all_index = value
         self.update_listbox()
         self.update_displayed_frame()
 
     def update_displayed_frame(self):
-        if self.displayed_frames[self.active_index] is None:
-            imgbytes = cv2.imencode(".png", self.resized_frames[self.active_index])[1].tobytes()
-            self.displayed_frames[self.active_index] = imgbytes
-        self.__graph_holder.draw_image(self.displayed_frames[self.active_index],
-                                       self.points_in_frames[self.active_index])
-        self.__radio_buttons[self.points_in_frames[self.active_index].status - 1].update(value=True)
+        if self.all_frames[self.active_all_index] is None:
+            imgbytes = cv2.imencode(".png", self.resized_frames[self.active_all_index])[1].tobytes()
+            self.all_frames[self.active_all_index] = imgbytes
+        self.__graph_holder.draw_image(self.all_frames[self.active_all_index],
+                                       self.points_in_frames[self.active_all_index])
+        self.__radio_buttons[self.points_in_frames[self.active_all_index].status - 1].update(value=True)
 
     def listbox_item_selected(self, item):
-        self.__graph_holder.select_point(item, self.points_in_frames[self.active_index])
+        self.__graph_holder.select_point(item, self.points_in_frames[self.active_all_index])
 
     def move_point(self, coordinates):
         new_scx = int(coordinates[0])
         new_scy = int(coordinates[1])
-        self.__graph_holder.move_point(self.points_in_frames[self.active_index], new_scx, new_scy)
+        self.__graph_holder.move_point(self.points_in_frames[self.active_all_index], new_scx, new_scy)
         self.update_listbox()
 
     def set_status(self, number):
-        self.points_in_frames[self.active_index].status = number
+        old_status = self.points_in_frames[self.active_all_index].status
+        id_ = self.points_in_frames[self.active_all_index].id_
+        self.__remove_specific(old_status, id_)
+        self.points_in_frames[self.active_all_index].status = number
         self.__radio_buttons[number - 1].update(value=True)
+
 
     # Private methods
     def __rescale_points(self):
@@ -333,3 +348,29 @@ class GuiHolder:
             working_image = cv2.line(working_image, (start_point.x, start_point.y), (end_point.x, end_point.y),
                                      self.__cv_colors[splits[2]], 1)
         return working_image
+
+    def __remove_specific(self, id_, old_status):
+        working_list = None
+        if old_status == 1:
+            working_list = self.completed_frames
+        elif old_status == 2:
+            working_list = self.to_fix_frames
+        elif old_status == 3:
+            working_list = self.undecided_frames
+        for i in range(0, len(working_list)):
+            if working_list[i].id_ == id_:
+                working_list.pop(i)
+                break
+
+    def __id_insert(self, id_, new_status):
+        working_list = None
+        if new_status == 1:
+            working_list = self.completed_frames
+        elif new_status == 2:
+            working_list = self.to_fix_frames
+        elif new_status == 3:
+            working_list = self.undecided_frames
+        for i in range(0, len(working_list)):
+            if working_list[i].id_ > id_:
+                working_list.insert(i, self.all_frames[id_])
+                break
