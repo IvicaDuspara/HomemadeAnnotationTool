@@ -200,6 +200,7 @@ class GuiHolder:
         self.__radio_buttons[2].update(disabled=False)
         self.__combo.update(disabled=False)
         self.all_frames = [None] * len(self.resized_frames)
+        self.displayed_frames = self.all_frames
         self.__listbox.update(disabled=False)
         self.update_listbox()
         self.update_displayed_frame()
@@ -317,13 +318,26 @@ class GuiHolder:
         self.update_listbox()
         self.update_displayed_frame()
 
-    def update_displayed_frame(self):
+    """def update_displayed_frame(self):
         if self.all_frames[self.active_index] is None:
             imgbytes = cv2.imencode(".png", self.resized_frames[self.active_index])[1].tobytes()
             self.all_frames[self.active_index] = imgbytes
         self.__graph_holder.draw_image(self.all_frames[self.active_index],
                                        self.points_in_all_frames[self.active_index])
-        self.__radio_buttons[self.points_in_all_frames[self.active_index].status - 1].update(value=True)
+        self.__radio_buttons[self.points_in_all_frames[self.active_index].status - 1].update(value=True)"""
+
+    def update_displayed_frame(self):
+        if len(self.displayed_frames) == 0:
+            self.__graph.update(visible=False)
+        else:
+            self.__graph.update(visible=True)
+            id_ = self.displayed_points[self.active_index].frame_id
+            if self.all_frames[id_] is None:
+                img_bytes = cv2.imencode(".png", self.resized_frames[id_])[1].tobytes()
+                self.all_frames[id_] = img_bytes
+            self.__graph_holder.draw_image(self.displayed_frames[self.active_index],
+                                           self.displayed_points[self.active_index])
+            self.__radio_buttons[self.displayed_points[self.active_index].status - 1].update(value=True)
 
     def listbox_item_selected(self, item):
         self.__graph_holder.select_point(item, self.points_in_all_frames[self.active_index])
@@ -361,7 +375,7 @@ class GuiHolder:
             self.active_index = self.__completed_index
         self.__slider.update(value=self.active_index, range=(0, len(self.displayed_frames) - 1))
         self.update_listbox()
-
+        self.update_displayed_frame()
 
     # Private methods
     def __rescale_points(self):
