@@ -43,8 +43,13 @@ class GuiHolder:
         self.__points_in_completed_frames = []
         self.__points_in_to_fix_frames = []
         self.__points_in_undecided_frames = []
+        self.displayed_points = []
 
-        self.active_all_index = 0
+        self.active_index = 0
+        self.__all_index = 0
+        self.__to_fix_index = 0
+        self.__completed_index = 0
+        self.__undecided_index = 0
 
         # other
         self.__cap = None
@@ -140,12 +145,13 @@ class GuiHolder:
             return
         self.points_in_frames = Point.read_points_from_file_2(path, self.__labels)
         self.points_in_frames = Point.rough_interpolate(self.points_in_frames)
+        self.displayed_points = self.points_in_frames
         max_frame = check_maximum_index(self.points_in_frames)
         if self.__graph_holder.defaulted_color:
             colors = ['blue'] * max_frame
             self.__graph_holder.colors = colors
         self.load_description_path = path
-        self.__slider.update(value=self.active_all_index, range=(0, len(self.points_in_frames) - 1), disabled=False)
+        self.__slider.update(value=self.active_index, range=(0, len(self.points_in_frames) - 1), disabled=False)
         self.update_listbox()
         self.__clear_button.update(disabled=False)
         self.__save_description.update(disabled=False)
@@ -234,26 +240,26 @@ class GuiHolder:
 
     def clear_selection(self):
         self.update_listbox()
-        self.__graph_holder.clear_selection(self.points_in_frames[self.active_all_index])
+        self.__graph_holder.clear_selection(self.points_in_frames[self.active_index])
 
     def next(self):
-        if self.active_all_index == len(self.all_frames) - 1:
-            self.active_all_index = 0
+        if self.active_index == len(self.all_frames) - 1:
+            self.active_index = 0
         else:
-            self.active_all_index += 1
+            self.active_index += 1
         self.update_listbox()
         self.update_displayed_frame()
-        self.update_slider(self.active_all_index)
+        self.update_slider(self.active_index)
         self.__graph_holder.selected_index = None
 
     def previous(self):
-        if self.active_all_index == 0:
-            self.active_all_index = len(self.all_frames) - 1
+        if self.active_index == 0:
+            self.active_index = len(self.all_frames) - 1
         else:
-            self.active_all_index -= 1
+            self.active_index -= 1
         self.update_listbox()
         self.update_displayed_frame()
-        self.update_slider(self.active_all_index)
+        self.update_slider(self.active_index)
         self.__graph_holder.selected_index = None
 
     def play(self):
@@ -273,7 +279,7 @@ class GuiHolder:
             elif key == 'right':
                 self.next()
         else:
-            point_ = self.points_in_frames[self.active_all_index].get_point(self.__graph_holder.selected_index)
+            point_ = self.points_in_frames[self.active_index].get_point(self.__graph_holder.selected_index)
             new_scx = point_.scx
             new_scy = point_.scy
             if key == 'up':
@@ -296,40 +302,59 @@ class GuiHolder:
 
     # Methods for updating gui
     def update_listbox(self):
-        self.__listbox.update(values=self.points_in_frames[self.active_all_index].points_list)
+        if len(self.displayed_points) == 0:
+            self.__listbox.update(values=[])
+        else:
+            self.__listbox.update(values=self.displayed_points[self.active_index].points_list)
 
     def update_slider(self, value):
         self.__slider.update(value=value)
 
     def slider_moved(self, value):
-        self.active_all_index = value
+        self.active_index = value
         self.update_listbox()
         self.update_displayed_frame()
 
     def update_displayed_frame(self):
-        if self.all_frames[self.active_all_index] is None:
-            imgbytes = cv2.imencode(".png", self.resized_frames[self.active_all_index])[1].tobytes()
-            self.all_frames[self.active_all_index] = imgbytes
-        self.__graph_holder.draw_image(self.all_frames[self.active_all_index],
-                                       self.points_in_frames[self.active_all_index])
-        self.__radio_buttons[self.points_in_frames[self.active_all_index].status - 1].update(value=True)
+        if self.all_frames[self.active_index] is None:
+            imgbytes = cv2.imencode(".png", self.resized_frames[self.active_index])[1].tobytes()
+            self.all_frames[self.active_index] = imgbytes
+        self.__graph_holder.draw_image(self.all_frames[self.active_index],
+                                       self.points_in_frames[self.active_index])
+        self.__radio_buttons[self.points_in_frames[self.active_index].status - 1].update(value=True)
 
     def listbox_item_selected(self, item):
-        self.__graph_holder.select_point(item, self.points_in_frames[self.active_all_index])
+        self.__graph_holder.select_point(item, self.points_in_frames[self.active_index])
 
     def move_point(self, coordinates):
         new_scx = int(coordinates[0])
         new_scy = int(coordinates[1])
-        self.__graph_holder.move_point(self.points_in_frames[self.active_all_index], new_scx, new_scy)
+        self.__graph_holder.move_point(self.points_in_frames[self.active_index], new_scx, new_scy)
         self.update_listbox()
 
     def set_status(self, number):
-        old_status = self.points_in_frames[self.active_all_index].status
-        id_ = self.points_in_frames[self.active_all_index].frame_id
+        old_status = self.points_in_frames[self.active_index].status
+        id_ = self.points_in_frames[self.active_index].frame_id
         self.__remove_specific(id_, old_status)
-        self.points_in_frames[self.active_all_index].status = number
+        self.points_in_frames[self.active_index].status = number
         self.__radio_buttons[number - 1].update(value=True)
         self.__id_insert(id_, number)
+
+    def change_display(self, value):
+        if value == 'All':
+            self.displayed_frames = self.all_frames
+            self.displayed_points = self.points_in_frames
+        elif value == 'Need fixing':
+            self.displayed_frames = self.to_fix_frames
+            self.displayed_points = self.__points_in_to_fix_frames
+        elif value == 'Undecided':
+            self.displayed_frames = self.undecided_frames
+            self.displayed_points = self.__points_in_undecided_frames
+        elif value == 'Completed':
+            self.displayed_frames = self.completed_frames
+            self.displayed_points = self.__points_in_completed_frames
+        self.update_listbox()
+
 
     # Private methods
     def __rescale_points(self):

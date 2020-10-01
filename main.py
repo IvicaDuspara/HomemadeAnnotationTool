@@ -67,4 +67,6 @@ while True:
         c.set_status(Constants.flag_fix)
     elif event == '-Radio_U-':
         c.set_status(Constants.flag_undecided)
+    elif event == '-COMBO-':
+        c.change_display(values[event])
 window.close()
