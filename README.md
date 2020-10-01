@@ -92,14 +92,8 @@ High Priority:
  + Specify location of saved description file and saved video
  + Export annotated video (user chooses resolution)
  + Export series of images (user chooses resolution)
- + Cleaner error messages as pop-up windows
 
 Normal Priority:
- + Allow user to flag specific frames with flags which describe state of annotated
-   picture.
-   + Completely annotated
-   + Incomplete annotation
-   + Needs manual fixing
  + Warning system for other annotators that they should check frames
    which were marked as incomplete or in need of fixing
  + Allow addition of points in each frames.
