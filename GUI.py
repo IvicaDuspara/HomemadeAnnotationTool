@@ -38,7 +38,11 @@ class GuiHolder:
         self.to_fix_frames = []
         self.undecided_frames = []
         self.displayed_frames = []
+
         self.points_in_frames = []
+        self.__points_in_completed_frames = []
+        self.__points_in_to_fix_frames = []
+        self.__points_in_undecided_frames = []
 
         self.active_all_index = 0
 
@@ -253,7 +257,9 @@ class GuiHolder:
         self.__graph_holder.selected_index = None
 
     def play(self):
-        print("Unutar p: " + str(self.__graph_holder.colors))
+        print("Unutar UD Framesa:\n" + str(self.__points_in_undecided_frames))
+        print("Unutar FIX Framesa:\n" + str(self.__points_in_to_fix_frames))
+        print("Unutar completed Framesa:\n" + str(self.__points_in_completed_frames))
 
     def pause(self):
         pass
@@ -319,11 +325,11 @@ class GuiHolder:
 
     def set_status(self, number):
         old_status = self.points_in_frames[self.active_all_index].status
-        id_ = self.points_in_frames[self.active_all_index].id_
-        self.__remove_specific(old_status, id_)
+        id_ = self.points_in_frames[self.active_all_index].frame_id
+        self.__remove_specific(id_, old_status)
         self.points_in_frames[self.active_all_index].status = number
         self.__radio_buttons[number - 1].update(value=True)
-
+        self.__id_insert(id_, number)
 
     # Private methods
     def __rescale_points(self):
@@ -350,27 +356,42 @@ class GuiHolder:
         return working_image
 
     def __remove_specific(self, id_, old_status):
-        working_list = None
+        working_display_list = None
+        working_points_list = None
         if old_status == 1:
-            working_list = self.completed_frames
+            working_display_list = self.completed_frames
+            working_points_list = self.__points_in_completed_frames
         elif old_status == 2:
-            working_list = self.to_fix_frames
+            working_display_list = self.to_fix_frames
+            working_points_list = self.__points_in_to_fix_frames
         elif old_status == 3:
-            working_list = self.undecided_frames
-        for i in range(0, len(working_list)):
-            if working_list[i].id_ == id_:
-                working_list.pop(i)
+            working_display_list = self.undecided_frames
+            working_points_list = self.__points_in_undecided_frames
+        for i in range(0, len(working_points_list)):
+            if working_points_list[i].frame_id == id_:
+                working_display_list.pop(i)
+                working_points_list.pop(i)
                 break
 
     def __id_insert(self, id_, new_status):
-        working_list = None
+        working_display_list = None
+        working_points_list = None
         if new_status == 1:
-            working_list = self.completed_frames
+            working_display_list = self.completed_frames
+            working_points_list = self.__points_in_completed_frames
         elif new_status == 2:
-            working_list = self.to_fix_frames
+            working_display_list = self.to_fix_frames
+            working_points_list = self.__points_in_to_fix_frames
         elif new_status == 3:
-            working_list = self.undecided_frames
-        for i in range(0, len(working_list)):
-            if working_list[i].id_ > id_:
-                working_list.insert(i, self.all_frames[id_])
+            working_display_list = self.undecided_frames
+            working_points_list = self.__points_in_undecided_frames
+        insertion_flag = 0
+        for i in range(0, len(working_points_list)):
+            if working_points_list[i].frame_id > id_:
+                working_points_list.insert(i, self.points_in_frames[id_])
+                working_display_list.insert(i, self.all_frames[id_])
+                insertion_flag = 1
                 break
+        if insertion_flag == 0:
+            working_points_list.append(self.points_in_frames[id_])
+            working_display_list.append(self.all_frames[id_])
