@@ -1,2 +1,6 @@
 venv/
 resources/
+*.mov
+*.mp4
+__pycache__
+.idea
