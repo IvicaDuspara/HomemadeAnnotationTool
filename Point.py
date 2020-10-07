@@ -29,7 +29,7 @@ class Frame:
     def __init__(self, frame_id):
         self.frame_id = frame_id
         self.points_list = []
-        self.status = Constants.flag_undecided
+        self.status = Constants.flag_nothing
 
     def append_point(self, point):
         self.points_list.append(point)
@@ -102,7 +102,7 @@ def read_points_from_file_2(path, labels):
             working_index = int(line.split(" ")[1][0:-2])
             frame_list.append(Frame(working_index))
         else:
-            splits = line.split(" ")
+            splits = line.strip().split(" ")
             if len(splits) == 1:
                 continue
             else:

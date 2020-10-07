@@ -83,10 +83,11 @@ class GuiHolder:
                                            key='-Radio_S-', disabled=True)],
                                 [psg.Radio("Needs fixing", group_id=1, default=False, enable_events=True,
                                            key="-Radio_F-", disabled=True)],
-                                [psg.Radio("Undecided", group_id=1, default=True, enable_events=True,
+                                [psg.Radio("Undecided", group_id=1, default=False, enable_events=True,
                                            key="-Radio_U-", disabled=True)],
                                 [psg.Combo(values=('All', 'Completed', 'Need fixing', 'Undecided'),
-                                           default_value='All', enable_events=True, key='-COMBO-', disabled=True)]]
+                                           default_value='All', enable_events=True, key='-COMBO-', disabled=True),
+                                 psg.Text(text="Current value:", auto_size_text=True)]]
         self.layout.append([psg.Listbox(values=[], key="-LIST-", size=(35, 35),
                                         select_mode="LISTBOX_SELECT_MODE_SINGLE",
                                         enable_events=True, disabled=True),
@@ -112,6 +113,7 @@ class GuiHolder:
         self.__column = self.layout[5][0]
         self.__radio_buttons = [self.__column_layout[0][0], self.__column_layout[1][0], self.__column_layout[2][0]]
         self.__combo = self.__column_layout[3][0]
+        self.__text = self.__column_layout[3][1]
 
         self.__graph_holder = None
 
@@ -264,7 +266,7 @@ class GuiHolder:
         self.__graph_holder.selected_index = None
 
     def play(self):
-        pass
+        self.__text.update(value="OOOOF!")
 
     def pause(self):
         pass
@@ -325,7 +327,14 @@ class GuiHolder:
                 self.all_frames[id_] = img_bytes
             self.__graph_holder.draw_image(self.displayed_frames[self.active_index],
                                            self.displayed_points[self.active_index])
-            self.__radio_buttons[self.displayed_points[self.active_index].status - 1].update(value=True)
+            status = self.displayed_points[self.active_index].status
+            if status == 4:
+                self.__radio_buttons[0].update(value=False)
+                self.__radio_buttons[1].update(value=False)
+                self.__radio_buttons[2].update(value=False)
+                #self.__text.update(value='Current value:')
+            else:
+                self.__radio_buttons[self.displayed_points[self.active_index].status - 1].update(value=True)
 
     def listbox_item_selected(self, item):
         self.__graph_holder.select_point(item, self.__points_in_all_frames[self.active_index])
@@ -343,6 +352,16 @@ class GuiHolder:
         self.__points_in_all_frames[self.active_index].status = number
         self.__radio_buttons[number - 1].update(value=True)
         self.__id_insert(id_, number)
+        if number == 1:
+            print("Number 1.")
+            self.__text.update(value='Current value: Satisfactory')
+        elif number == 2:
+            print("Number 2.")
+            self.__text.update(value='Current value: Needs fixing')
+        elif number == 3:
+            print("Number 3.")
+            self.__text.update(value='Current value: Undecided')
+        self.__text.update(value='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaa')
 
     def change_display(self, value):
         if value == 'All':
@@ -390,6 +409,8 @@ class GuiHolder:
         return working_image
 
     def __remove_specific(self, id_, old_status):
+        if old_status == 4:
+            return
         working_display_list = None
         working_points_list = None
         if old_status == 1:
