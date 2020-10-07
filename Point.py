@@ -30,6 +30,7 @@ class Frame:
         self.frame_id = frame_id
         self.points_list = []
         self.status = Constants.flag_nothing
+        self.was_displayed = False
 
     def append_point(self, point):
         self.points_list.append(point)

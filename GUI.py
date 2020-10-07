@@ -342,6 +342,7 @@ class GuiHolder:
                     PIF.set_scaled_coordinates(int(PIF.x * GuiHolder.display_width / width),
                                                int(PIF.y * GuiHolder.display_height / height))
                 img_bytes = cv2.imencode(".png", imS)[1].tobytes()
+                working_list.was_displayed = True
                 self.all_frames[self.active_index] = img_bytes
             else:
                 print("There was an error in reading a frame no: " + str(self.active_index))
@@ -404,17 +405,19 @@ class GuiHolder:
         self.update_displayed_frame_2()
 
     def close(self):
-        self.__cap.release()
+        if self.__cap is not None:
+            self.__cap.release()
 
     # Private methods
     def __rescale_points(self):
         for frame in self.__points_in_all_frames:
-            for i in range(0, frame.size()):
-                working_point = frame.get_point(i)
-                scx = working_point.scx
-                scy = working_point.scy
-                working_point.x = int(scx * self.original_width / self.display_width)
-                working_point.y = int(scy * self.original_height / self.display_height)
+            if frame.was_displayed:
+                for i in range(0, frame.size()):
+                    working_point = frame.get_point(i)
+                    scx = working_point.scx
+                    scy = working_point.scy
+                    working_point.x = int(scx * self.original_width / self.display_width)
+                    working_point.y = int(scy * self.original_height / self.display_height)
 
     def __draw_on_working_image(self, original_image, working_frame):
         working_image = copy.deepcopy(original_image)
