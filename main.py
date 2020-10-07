@@ -24,6 +24,7 @@ while True:
     # End program if user closes window or
     # presses the OK button
     if event == PSG.WIN_CLOSED:
+        c.close()
         break
     elif event == "-FILE_JSON-":
         c.load_json_file(values["-FILE_JSON-"])
