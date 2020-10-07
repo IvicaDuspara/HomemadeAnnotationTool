@@ -50,7 +50,9 @@ class GuiHolder:
         self.__all_index = 0
         self.__to_fix_index = 0
         self.__completed_index = 0
+        self.__frame_counter = 0
         self.__undecided_index = 0
+
 
         # other
         self.__cap = None
@@ -154,7 +156,7 @@ class GuiHolder:
             self.__graph_holder.colors = colors
         self.load_description_path = path
         self.__slider.update(value=self.active_index, range=(0, len(self.__points_in_all_frames) - 1), disabled=False)
-        self.update_listbox()
+        self.update_listbox_2()
         self.__clear_button.update(disabled=False)
         self.__save_description.update(disabled=False)
         self.__video_button.update(disabled=False)
@@ -205,6 +207,30 @@ class GuiHolder:
         self.update_listbox()
         self.update_displayed_frame()
 
+    def load_video_file_2(self, path):
+        if path is None:
+            psg.popup_error('File error', 'Path can not be None')
+            return
+        elif path == '' or path.strip() == '':
+            psg.popup_error('File error', 'Path can not be an empty string')
+            return
+        elif self.load_description_path == "":
+            psg.popup_error('Video file error', 'Please load the file describing frames first')
+            return
+        self.load_video_path = path
+        self.__cap = cv2.VideoCapture(path)
+        self.__cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        self.__frame_rate = self.__cap.get(cv2.CAP_PROP_FPS)
+        self.__save_video.update(disabled=False)
+        self.__save_as_images.update(disabled=False)
+       #self.__radio_buttons[0].update(disabled=False)
+       #self.__radio_buttons[1].update(disabled=False)
+       #self.__radio_buttons[2].update(disabled=False)
+        #self.__combo.update(disabled=False)
+        self.__listbox.update(disabled=False)
+        self.update_listbox_2()
+        self.update_displayed_frame_2()
+
     def save_description_file(self, filename):
         file = open(filename, 'w')
         for i in range(0, len(self.__points_in_all_frames)):
@@ -242,7 +268,7 @@ class GuiHolder:
         self.__progress_bar.update(0, max=0, visible=True)
 
     def clear_selection(self):
-        self.update_listbox()
+        self.update_listbox_2()
         self.__graph_holder.clear_selection(self.__points_in_all_frames[self.active_index])
 
     def next(self):
@@ -250,8 +276,10 @@ class GuiHolder:
             self.active_index = 0
         else:
             self.active_index += 1
-        self.update_listbox()
-        self.update_displayed_frame()
+        #self.update_listbox()
+        #self.update_displayed_frame()
+        self.update_listbox_2()
+        self.update_displayed_frame_2()
         self.update_slider(self.active_index)
         self.__graph_holder.selected_index = None
 
@@ -260,13 +288,15 @@ class GuiHolder:
             self.active_index = len(self.displayed_frames) - 1
         else:
             self.active_index -= 1
-        self.update_listbox()
-        self.update_displayed_frame()
+        #self.update_listbox()
+        #self.update_displayed_frame()
+        self.update_listbox_2()
+        self.update_displayed_frame_2()
         self.update_slider(self.active_index)
         self.__graph_holder.selected_index = None
 
     def play(self):
-        self.__text.update(value="OOOOF!")
+        pass
 
     def pause(self):
         pass
@@ -308,13 +338,19 @@ class GuiHolder:
         else:
             self.__listbox.update(values=self.displayed_points[self.active_index].points_list)
 
+    def update_listbox_2(self):
+        if len(self.displayed_points) == 0:
+            self.__listbox.update(values=[])
+        else:
+            self.__listbox.update(values=self.displayed_points[self.active_index].points_list)
+
     def update_slider(self, value):
         self.__slider.update(value=value)
 
     def slider_moved(self, value):
         self.active_index = value
-        self.update_listbox()
-        self.update_displayed_frame()
+        self.update_listbox_2()
+        self.update_displayed_frame_2()
 
     def update_displayed_frame(self):
         if len(self.displayed_frames) == 0:
@@ -336,6 +372,32 @@ class GuiHolder:
             else:
                 self.__radio_buttons[self.displayed_points[self.active_index].status - 1].update(value=True)
 
+    def update_displayed_frame_2(self):
+        self.__graph.update(visible=True)
+        self.__cap.set(cv2.CAP_PROP_POS_FRAMES, self.active_index)
+        ret, frame = self.__cap.read()
+        if ret:
+            working_list = self.__points_in_all_frames[self.active_index]
+            height, width, channel = frame.shape
+            self.original_width = width
+            self.original_height = height
+            imS = cv2.resize(frame, (GuiHolder.display_width, GuiHolder.display_height))
+            for PIF in working_list.points_list:
+                PIF.set_scaled_coordinates(int(PIF.x * GuiHolder.display_width / width),
+                                           int(PIF.y * GuiHolder.display_height / height))
+            img_bytes = cv2.imencode(".png", imS)[1].tobytes()
+            self.__graph_holder.draw_image(img_bytes, self.displayed_points[self.active_index])
+            status = self.displayed_points[self.active_index].status
+            if status == 4:
+                self.__radio_buttons[0].update(value=False)
+                self.__radio_buttons[1].update(value=False)
+                self.__radio_buttons[2].update(value=False)
+                # self.__text.update(value='Current value:')
+            else:
+                self.__radio_buttons[self.displayed_points[self.active_index].status - 1].update(value=True)
+        else:
+            print("There was an error in reading a frame no: "  + str(self.active_index))
+
     def listbox_item_selected(self, item):
         self.__graph_holder.select_point(item, self.__points_in_all_frames[self.active_index])
 
@@ -343,7 +405,7 @@ class GuiHolder:
         new_scx = int(coordinates[0])
         new_scy = int(coordinates[1])
         self.__graph_holder.move_point(self.__points_in_all_frames[self.active_index], new_scx, new_scy)
-        self.update_listbox()
+        self.update_listbox_2()
 
     def set_status(self, number):
         old_status = self.__points_in_all_frames[self.active_index].status
@@ -381,8 +443,8 @@ class GuiHolder:
             self.displayed_points = self.__points_in_completed_frames
             self.active_index = self.__completed_index
         self.__slider.update(value=self.active_index, range=(0, len(self.displayed_frames) - 1))
-        self.update_listbox()
-        self.update_displayed_frame()
+        self.update_listbox_2()
+        self.update_displayed_frame_2()
 
     # Private methods
     def __rescale_points(self):

@@ -30,7 +30,7 @@ while True:
     elif event == "-FILE_DESCRIPTION-":
         c.load_description_file(values["-FILE_DESCRIPTION-"])
     elif event == "-FILE_VIDEO-":
-        c.load_video_file(values["-FILE_VIDEO-"])
+        c.load_video_file_2(values["-FILE_VIDEO-"])
     elif event == "Previous":
         c.previous()
     elif event == "Next":
