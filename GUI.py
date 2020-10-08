@@ -85,7 +85,7 @@ class GuiHolder:
                                            key="-Radio_U-", disabled=True)],
                                 [psg.Combo(values=('All', 'Completed', 'Need fixing', 'Undecided'),
                                            default_value='All', enable_events=True, key='-COMBO-', disabled=True),
-                                 psg.Text(text="Current value:", auto_size_text=True)]]
+                                 psg.Text(text="Current value:", size=(35, 1))]]
         self.layout.append([psg.Listbox(values=[], key="-LIST-", size=(35, 35),
                                         select_mode="LISTBOX_SELECT_MODE_SINGLE",
                                         enable_events=True, disabled=True),
@@ -173,9 +173,9 @@ class GuiHolder:
         self.__frame_rate = self.__cap.get(cv2.CAP_PROP_FPS)
         self.__save_video.update(disabled=False)
         self.__save_as_images.update(disabled=False)
-       #self.__radio_buttons[0].update(disabled=False)
-       #self.__radio_buttons[1].update(disabled=False)
-       #self.__radio_buttons[2].update(disabled=False)
+        self.__radio_buttons[0].update(disabled=False)
+        self.__radio_buttons[1].update(disabled=False)
+        self.__radio_buttons[2].update(disabled=False)
         #self.__combo.update(disabled=False)
         self.all_frames = [None] * len(self.__points_in_all_frames)
         self.__listbox.update(disabled=False)
@@ -237,8 +237,6 @@ class GuiHolder:
             self.active_index = 0
         else:
             self.active_index += 1
-        #self.update_listbox()
-        #self.update_displayed_frame()
         self.update_listbox()
         self.update_displayed_frame_2()
         self.update_slider(self.active_index)
@@ -249,8 +247,6 @@ class GuiHolder:
             self.active_index = len(self.displayed_frames) - 1
         else:
             self.active_index -= 1
-        #self.update_listbox()
-        #self.update_displayed_frame()
         self.update_listbox()
         self.update_displayed_frame_2()
         self.update_slider(self.active_index)
@@ -307,26 +303,6 @@ class GuiHolder:
         self.update_listbox()
         self.update_displayed_frame_2()
 
-    def update_displayed_frame(self):
-        if len(self.displayed_frames) == 0:
-            self.__graph.update(visible=False)
-        else:
-            self.__graph.update(visible=True)
-            id_ = self.displayed_points[self.active_index].frame_id
-            if self.all_frames[id_] is None:
-                img_bytes = cv2.imencode(".png", self.resized_frames[id_])[1].tobytes()
-                self.all_frames[id_] = img_bytes
-            self.__graph_holder.draw_image(self.displayed_frames[self.active_index],
-                                           self.displayed_points[self.active_index])
-            status = self.displayed_points[self.active_index].status
-            if status == 4:
-                self.__radio_buttons[0].update(value=False)
-                self.__radio_buttons[1].update(value=False)
-                self.__radio_buttons[2].update(value=False)
-                #self.__text.update(value='Current value:')
-            else:
-                self.__radio_buttons[self.displayed_points[self.active_index].status - 1].update(value=True)
-
     def update_displayed_frame_2(self):
         self.__graph.update(visible=True)
         self.__cap.set(cv2.CAP_PROP_POS_FRAMES, self.active_index)
@@ -348,11 +324,11 @@ class GuiHolder:
                 print("There was an error in reading a frame no: " + str(self.active_index))
         self.__graph_holder.draw_image(self.all_frames[self.active_index], self.displayed_points[self.active_index])
         status = self.displayed_points[self.active_index].status
+        self.__update_text(status)
         if status == 4:
             self.__radio_buttons[0].update(value=False)
             self.__radio_buttons[1].update(value=False)
             self.__radio_buttons[2].update(value=False)
-            # self.__text.update(value='Current value:')
         else:
             self.__radio_buttons[self.displayed_points[self.active_index].status - 1].update(value=True)
 
@@ -372,16 +348,7 @@ class GuiHolder:
         self.__points_in_all_frames[self.active_index].status = number
         self.__radio_buttons[number - 1].update(value=True)
         self.__id_insert(id_, number)
-        if number == 1:
-            print("Number 1.")
-            self.__text.update(value='Current value: Satisfactory')
-        elif number == 2:
-            print("Number 2.")
-            self.__text.update(value='Current value: Needs fixing')
-        elif number == 3:
-            print("Number 3.")
-            self.__text.update(value='Current value: Undecided')
-        self.__text.update(value='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaa')
+        self.__update_text(number)
 
     def change_display(self, value):
         if value == 'All':
@@ -475,3 +442,13 @@ class GuiHolder:
         if insertion_flag == 0:
             working_points_list.append(self.__points_in_all_frames[id_])
             working_display_list.append(self.all_frames[id_])
+
+    def __update_text(self, number):
+        if number == 1:
+            self.__text.update(value='Current value: Satisfactory')
+        elif number == 2:
+            self.__text.update(value='Current value: Needs fixing')
+        elif number == 3:
+            self.__text.update(value='Current value: Undecided')
+        else:
+            self.__text.update(value='Current value: ')
