@@ -157,7 +157,7 @@ class GuiHolder:
         self.__save_description.update(disabled=False)
         self.__video_button.update(disabled=False)
 
-    def load_video_file_2(self, path):
+    def load_video_file(self, path):
         if path is None:
             psg.popup_error('File error', 'Path can not be None')
             return
@@ -211,7 +211,7 @@ class GuiHolder:
                 video_out.write(working_image)
                 self.__progress_bar.update(i)
             else:
-                print("Save error?")
+                psg.popup_error('Save error', 'A frame in a video is missing.\nThis frame will be skipped')
         video_out.release()
         self.__progress_bar.update(0, max=0, visible=False)
 
@@ -226,7 +226,7 @@ class GuiHolder:
                 cv2.imwrite('./images/out' + str(i) + '.png', working_image)
                 self.__progress_bar.update(i)
             else:
-                print("Save error?")
+                psg.popup_error('Save error', 'A frame in a video is missing.\nThis frame will be skipped')
         self.__progress_bar.update(0, max=0, visible=True)
 
     def clear_selection(self):
@@ -325,7 +325,7 @@ class GuiHolder:
                     working_list.was_displayed = True
                     self.all_frames[self.active_index] = img_bytes
                 else:
-                    print("There was an error in reading a frame no: " + str(self.active_index))
+                    psg.popup_error('Read error', 'Couldn\'t read frame no: ' + str(self.active_index))
             self.__graph_holder.draw_image(self.displayed_frames[self.active_index], self.displayed_points[self.active_index])
             status = self.displayed_points[self.active_index].status
             self.__update_text(status)
