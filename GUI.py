@@ -83,7 +83,7 @@ class GuiHolder:
                                            key="-Radio_F-", disabled=True)],
                                 [psg.Radio("Undecided", group_id=1, default=False, enable_events=True,
                                            key="-Radio_U-", disabled=True)],
-                                [psg.Combo(values=('All', 'Completed', 'Need fixing', 'Undecided'),
+                                [psg.Combo(values=('All', 'Satisfactory', 'Needs fixing', 'Undecided'),
                                            default_value='All', enable_events=True, key='-COMBO-', disabled=True),
                                  psg.Text(text="Current value:", size=(35, 1))]]
         self.layout.append([psg.Listbox(values=[], key="-LIST-", size=(35, 35),
@@ -176,11 +176,12 @@ class GuiHolder:
         self.__radio_buttons[0].update(disabled=False)
         self.__radio_buttons[1].update(disabled=False)
         self.__radio_buttons[2].update(disabled=False)
-        #self.__combo.update(disabled=False)
+        self.__combo.update(disabled=False)
         self.all_frames = [None] * len(self.__points_in_all_frames)
+        self.displayed_frames = self.all_frames
         self.__listbox.update(disabled=False)
         self.update_listbox()
-        self.update_displayed_frame_2()
+        self.update_displayed_frame()
 
     def save_description_file(self, filename):
         file = open(filename, 'w')
@@ -238,7 +239,7 @@ class GuiHolder:
         else:
             self.active_index += 1
         self.update_listbox()
-        self.update_displayed_frame_2()
+        self.update_displayed_frame()
         self.update_slider(self.active_index)
         self.__graph_holder.selected_index = None
 
@@ -248,7 +249,7 @@ class GuiHolder:
         else:
             self.active_index -= 1
         self.update_listbox()
-        self.update_displayed_frame_2()
+        self.update_displayed_frame()
         self.update_slider(self.active_index)
         self.__graph_holder.selected_index = None
 
@@ -301,36 +302,39 @@ class GuiHolder:
     def slider_moved(self, value):
         self.active_index = value
         self.update_listbox()
-        self.update_displayed_frame_2()
+        self.update_displayed_frame()
 
-    def update_displayed_frame_2(self):
-        self.__graph.update(visible=True)
-        self.__cap.set(cv2.CAP_PROP_POS_FRAMES, self.active_index)
-        if self.all_frames[self.active_index] is None:
-            ret, frame = self.__cap.read()
-            if ret:
-                working_list = self.__points_in_all_frames[self.active_index]
-                height, width, channel = frame.shape
-                self.original_width = width
-                self.original_height = height
-                imS = cv2.resize(frame, (GuiHolder.display_width, GuiHolder.display_height))
-                for PIF in working_list.points_list:
-                    PIF.set_scaled_coordinates(int(PIF.x * GuiHolder.display_width / width),
-                                               int(PIF.y * GuiHolder.display_height / height))
-                img_bytes = cv2.imencode(".png", imS)[1].tobytes()
-                working_list.was_displayed = True
-                self.all_frames[self.active_index] = img_bytes
-            else:
-                print("There was an error in reading a frame no: " + str(self.active_index))
-        self.__graph_holder.draw_image(self.all_frames[self.active_index], self.displayed_points[self.active_index])
-        status = self.displayed_points[self.active_index].status
-        self.__update_text(status)
-        if status == 4:
-            self.__radio_buttons[0].update(value=False)
-            self.__radio_buttons[1].update(value=False)
-            self.__radio_buttons[2].update(value=False)
+    def update_displayed_frame(self):
+        if len(self.displayed_frames) == 0:
+            self.__graph.update(visible=False)
         else:
-            self.__radio_buttons[self.displayed_points[self.active_index].status - 1].update(value=True)
+            self.__graph.update(visible=True)
+            self.__cap.set(cv2.CAP_PROP_POS_FRAMES, self.active_index)
+            if self.all_frames[self.active_index] is None:
+                ret, frame = self.__cap.read()
+                if ret:
+                    working_list = self.__points_in_all_frames[self.active_index]
+                    height, width, channel = frame.shape
+                    self.original_width = width
+                    self.original_height = height
+                    imS = cv2.resize(frame, (GuiHolder.display_width, GuiHolder.display_height))
+                    for PIF in working_list.points_list:
+                        PIF.set_scaled_coordinates(int(PIF.x * GuiHolder.display_width / width),
+                                                   int(PIF.y * GuiHolder.display_height / height))
+                    img_bytes = cv2.imencode(".png", imS)[1].tobytes()
+                    working_list.was_displayed = True
+                    self.all_frames[self.active_index] = img_bytes
+                else:
+                    print("There was an error in reading a frame no: " + str(self.active_index))
+            self.__graph_holder.draw_image(self.displayed_frames[self.active_index], self.displayed_points[self.active_index])
+            status = self.displayed_points[self.active_index].status
+            self.__update_text(status)
+            if status == 4:
+                self.__radio_buttons[0].update(value=False)
+                self.__radio_buttons[1].update(value=False)
+                self.__radio_buttons[2].update(value=False)
+            else:
+                self.__radio_buttons[self.displayed_points[self.active_index].status - 1].update(value=True)
 
     def listbox_item_selected(self, item):
         self.__graph_holder.select_point(item, self.__points_in_all_frames[self.active_index])
@@ -369,7 +373,7 @@ class GuiHolder:
             self.active_index = self.__completed_index
         self.__slider.update(value=self.active_index, range=(0, len(self.displayed_frames) - 1))
         self.update_listbox()
-        self.update_displayed_frame_2()
+        self.update_displayed_frame()
 
     def close(self):
         if self.__cap is not None:
