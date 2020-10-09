@@ -184,13 +184,14 @@ class GuiHolder:
         self.update_displayed_frame()
 
     def save_description_file(self, filename):
+        self.__rescale_points()
         file = open(filename, 'w')
         for i in range(0, len(self.__points_in_all_frames)):
             file.write("Frame " + str(i) + ":\n")
             temp_string = ""
             for j in range(0, self.__points_in_all_frames[i].size()):
                 working_point = self.__points_in_all_frames[i].get_point(j)
-                temp_string += str(working_point.id_) + " P(" + str(working_point.scx) + "," + str(working_point.scy) + ")"
+                temp_string += str(working_point.id_) + " P(" + str(working_point.x) + "," + str(working_point.y) + ")"
                 if j != self.__points_in_all_frames[i].size() - 1:
                     temp_string += " "
                 else:
