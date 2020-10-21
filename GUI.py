@@ -74,6 +74,9 @@ class GuiHolder:
                             psg.Slider(default_value=0, range=(0, 0), disabled=True, enable_events=True,
                                        orientation='horizontal',
                                        size=(75, 25), key="-FRAME_SLIDER-")])
+        self.layout.append([psg.Button("Jump", disabled=True, key="-JUMP-"), psg.In(size=(15, 1), enable_events=True,
+                                                                                    key="-JMP_DESTINATION-"),
+                            psg.Button("Save satisfactory images", disabled=True, key="-SAVE_SATISFACTORY-")])
         self.layout.append([psg.HorizontalSeparator()])
         self.layout.append([psg.ProgressBar(max_value=0, orientation='horizontal', bar_color=('green', 'white'),
                                             visible=False, size=(100, 15))])
@@ -104,11 +107,11 @@ class GuiHolder:
         self.__save_as_images = self.layout[1][6]
         self.__slider = self.layout[1][7]
 
-        self.__progress_bar = self.layout[3][0]
+        self.__progress_bar = self.layout[4][0]
 
-        self.__listbox = self.layout[4][0]
-        self.__graph = self.layout[4][1]
-        self.__column = self.layout[5][0]
+        self.__listbox = self.layout[5][0]
+        self.__graph = self.layout[5][1]
+        self.__column = self.layout[6][0]
         self.__radio_buttons = [self.__column_layout[0][0], self.__column_layout[1][0], self.__column_layout[2][0]]
         self.__combo = self.__column_layout[3][0]
         self.__text = self.__column_layout[3][1]
@@ -177,6 +180,8 @@ class GuiHolder:
         self.__radio_buttons[1].update(disabled=False)
         self.__radio_buttons[2].update(disabled=False)
         self.__combo.update(disabled=False)
+        self.layout[2][0].update(disabled=False)
+        self.layout[2][2].update(disabled=False)
         self.all_frames = [None] * len(self.__points_in_all_frames)
         self.displayed_frames = self.all_frames
         self.__listbox.update(disabled=False)
@@ -228,7 +233,22 @@ class GuiHolder:
                 self.__progress_bar.update(i)
             else:
                 psg.popup_error('Save error', 'A frame in a video is missing.\nThis frame will be skipped')
-        self.__progress_bar.update(0, max=0, visible=True)
+        self.__progress_bar.update(0, max=0, visible=False)
+
+    def save_satisfactory_images(self):
+        self.__rescale_points()
+        self.__progress_bar.update(0, max=int(len(self.__points_in_completed_frames)), visible=True)
+        for i in range(0, len(self.__points_in_completed_frames)):
+            self.__cap.set(cv2.CAP_PROP_POS_FRAMES, self.__points_in_completed_frames[i].frame_id)
+            ret, frame = self.__cap.read()
+            if ret:
+                working_image = self.__draw_on_working_image(frame, self.__points_in_completed_frames[i])
+                cv2.imwrite('./images/out' + str(i) + '.png', working_image)
+                self.__progress_bar.update(i)
+            else:
+                psg.popup_error('Save error', 'A frame in a video is missing.\nThis frame will be skipped')
+        self.__progress_bar.update(0, max=0, visible=False)
+
 
     def clear_selection(self):
         self.update_listbox()
@@ -289,6 +309,15 @@ class GuiHolder:
                 if new_scx > self.display_width:
                     new_scx = self.display_width
             self.move_point((new_scx, new_scy))
+
+    def jump(self):
+        value = self.layout[2][1].get()
+        try:
+            value = int(value)
+            self.update_slider(value)
+            self.slider_moved(value)
+        except:
+            return
 
     # Methods for updating gui
     def update_listbox(self):

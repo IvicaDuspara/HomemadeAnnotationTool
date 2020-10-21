@@ -70,4 +70,8 @@ while True:
         c.set_status(Constants.flag_undecided)
     elif event == '-COMBO-':
         c.change_display(values[event])
+    elif event == '-JUMP-':
+        c.jump()
+    elif event == '-SAVE_SATISFACTORY-':
+        c.save_satisfactory_images()
 window.close()
