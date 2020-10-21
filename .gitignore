@@ -4,3 +4,5 @@ resources/
 *.mp4
 __pycache__
 .idea
+ins/
+imageouts/
